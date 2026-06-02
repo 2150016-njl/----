@@ -1,0 +1,23 @@
+<launch>
+  <arg name="trajectory" default="straight"/>
+  <arg name="ego_x" default="0.0"/>
+  <arg name="ego_y" default="0.0"/>
+  <arg name="ego_heading" default="0.0"/>
+  <arg name="udp_ip" default="127.0.0.1"/>
+  <arg name="udp_port" default="5005"/>
+  <arg name="rate_hz" default="10.0"/>
+
+  <node pkg="ego_trajectory_udp" type="ego_trajectory_udp_node" name="ego_trajectory_udp_node" output="screen">
+    <param name="trajectory" value="$(arg trajectory)"/>
+    <param name="ego_x" value="$(arg ego_x)"/>
+    <param name="ego_y" value="$(arg ego_y)"/>
+    <param name="ego_heading" value="$(arg ego_heading)"/>
+    <param name="udp_ip" value="$(arg udp_ip)"/>
+    <param name="udp_port" value="$(arg udp_port)"/>
+    <param name="rate_hz" value="$(arg rate_hz)"/>
+    <param name="point_num" value="80"/>
+    <param name="trajectory_length" value="20.0"/>
+  </node>
+
+  <node pkg="ego_trajectory_udp" type="ego_trajectory_visualizer_node" name="ego_trajectory_visualizer_node" output="screen"/>
+</launch>
