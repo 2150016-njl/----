@@ -1,0 +1,4 @@
+﻿trajectory,file,source,color
+straight,trajectory_straight_jiasi.csv,Jiasi Road centerline,#dc2626
+lane_change,trajectory_lane_change_changji.csv,East Changji Road with smooth lane offset,#f97316
+circle,trajectory_circle_luhuan.csv,Luhuan Road loop-like route,#7c3aed

@@ -1,0 +1,293 @@
+﻿id,highway,name,name_en,oneway,drivable,points,length_m
+413977263,tertiary,昌吉东路,East Changji Road,yes,True,22,1231.26
+338789902,tertiary,昌吉东路,East Changji Road,yes,True,21,1223.31
+1270942545,trunk,曹安公路,Caoan Highway,yes,False,17,1100.60
+266157883,service,嘉三路,Jiasan Road,no,True,29,1098.61
+164316009,service,绿环路,Lühuan Road,,True,21,841.74
+102780927,trunk,曹安公路,Caoan Highway,yes,False,26,820.38
+135420816,service,嘉二路,Jiaer Road,yes,True,13,793.02
+1456432431,footway,,,,False,37,789.86
+266161866,service,李庄环路,Lizhuanghuan Road,no,True,17,702.95
+168457270,service,,,no,False,43,603.29
+342007720,unclassified,谢春路,,,True,5,502.66
+585573845,service,嘉二路,Jiaer Road,yes,True,10,466.56
+135427149,footway,,,,False,11,456.72
+135420818,service,同丁路,Tongding Road,,True,13,454.97
+322110434,tertiary,昌吉东路,East Changji Road,yes,True,13,404.59
+1461453011,service,,,,True,12,399.79
+993386743,service,,,,True,12,399.10
+342007717,unclassified,,,,True,4,398.31
+338789901,tertiary,昌吉东路,East Changji Road,yes,True,12,390.14
+342007705,unclassified,谢春路,,,True,4,376.77
+1047794580,unclassified,谢春路,,,True,4,374.02
+585573740,service,同嘉大道,Tongjia Road,no,True,15,336.27
+993386745,service,绿环路,Lühuan Road,,True,13,333.85
+342007725,unclassified,,,,True,3,333.78
+164316010,service,李庄环路,Lizhuanghuan Road,no,True,11,323.56
+342007726,unclassified,春秀路,,,True,5,320.30
+135420817,service,嘉二路,Jiaer Road,yes,True,4,318.36
+264726760,pedestrian,栋梁大道,Dongliang Avenue,,False,11,312.08
+266170486,service,八步路,,,True,12,299.59
+338789915,tertiary,昌吉东路,East Changji Road,yes,True,8,298.66
+338789914,tertiary,昌吉东路,East Changji Road,yes,True,6,294.08
+1461453013,service,,,,True,7,288.44
+1461453012,service,,,,True,9,283.21
+1378069002,unclassified,地下停车场,,yes,True,6,269.94
+135385550,service,嘉一路,Jiayi Road,,True,15,267.24
+255771324,footway,,,,False,12,254.23
+993386742,service,,,,True,3,246.01
+1047794582,service,绿环路,Lühuan Road,,True,7,245.53
+264726761,pedestrian,栋梁大道,Dongliang Avenue,,False,9,238.01
+135382788,footway,,,,False,25,225.43
+164316078,service,嘉一路,Jiayi Road,,True,17,222.13
+164316016,service,嘉一路,Jiayi Road,no,True,5,219.57
+585572275,service,中央大道,Zhongyan Avenue,yes,True,4,217.49
+1461452999,service,,,,True,4,205.45
+585572299,footway,,,,False,16,203.15
+585573709,service,同丙路,Tongbing Road,no,True,8,202.69
+266233213,footway,,,,False,8,192.02
+255771342,footway,,,,False,10,183.74
+585572279,service,嘉三路,Jiasan Road,no,True,7,178.61
+264726765,footway,,,,False,6,177.79
+585573723,service,嘉一路,Jiayi Road,,True,10,177.30
+266205933,service,,,,True,14,169.91
+1317559471,service,,,,True,3,168.64
+703847710,service,,,,True,6,166.81
+135420819,service,同丁路,Tongding Road,,True,8,164.50
+164316038,service,嘉二路,Jiaer Road,yes,True,3,159.85
+164316015,service,嘉二路,Jiaer Road,yes,True,5,159.55
+263913992,pedestrian,嘉实•同济新天地,Jiashi · Tongji Xintiandi,,False,6,158.71
+1456430867,footway,,,,False,4,157.66
+585573728,service,嘉三路,Jiasan Road,no,True,3,155.63
+585573721,footway,,,,False,6,153.04
+1457176860,pedestrian,,,,False,3,152.92
+1457176858,service,,,,True,10,149.96
+585573738,service,嘉二路,Jiaer Road,yes,True,2,149.51
+164316056,service,嘉四路,Jiasi Road,no,True,2,147.68
+266218620,footway,,,,False,19,147.65
+384531667,pedestrian,栋梁大道,Dongliang Avenue,,False,5,147.47
+264726857,footway,,,,False,25,147.23
+164316061,service,李庄环路,Lizhuanghuan Road,yes,True,10,146.77
+585573729,service,嘉四路,Jiasi Road,no,True,3,145.62
+266345021,service,,,,False,16,145.50
+585573720,service,嘉二路,Jiaer Road,yes,True,3,145.37
+585573736,service,嘉二路,Jiaer Road,yes,True,5,144.68
+164316058,service,,,,True,2,144.31
+164316033,service,嘉二路,Jiaer Road,yes,True,4,142.27
+266205937,footway,,,,False,8,141.07
+585572282,service,,,,True,6,139.77
+135385548,service,中央大道,Zhongyan Avenue,yes,True,3,139.43
+168457268,service,,,,True,9,139.35
+585572272,service,,,,True,3,138.73
+585573739,service,同甲路,Tongjia Road,no,True,2,138.02
+164316012,service,同甲路,Tongjia Road,no,True,2,137.87
+266205942,service,,,,True,9,136.65
+266345023,service,同乙路,Tongyi Road,no,True,6,136.24
+135404400,service,中央大道,Zhongyan Avenue,yes,True,3,135.27
+164316070,service,李庄环路,Lizhuanghuan Road,yes,True,8,135.09
+266205940,footway,,,,False,32,134.10
+585571080,service,中央大道,Zhongyan Avenue,yes,True,6,133.83
+164316030,service,,,,True,7,133.30
+585572280,service,,,,True,7,132.88
+266205938,footway,,,,False,25,132.18
+164316020,service,中央大道,Zhongyan Avenue,yes,True,7,132.14
+164316021,service,同嘉大道,Tongjia Road,no,True,3,131.21
+1461453003,service,,,,True,2,130.48
+585573727,service,同乙路,Tongyi Road,no,True,3,130.12
+585573708,service,嘉四路,Jiasi Road,no,True,4,128.43
+164316047,service,春归路,Chungui Road,,True,6,127.14
+585573712,service,同丙路,Tongbing Road,no,False,3,126.40
+585572269,service,中央大道,Zhongyan Avenue,yes,True,4,125.98
+585573733,service,嘉三路,Jiasan Road,no,True,5,125.11
+585572271,service,中央大道,Zhongyan Avenue,yes,True,4,124.58
+266221576,footway,,,,False,3,123.86
+585573730,service,同甲路,Tongjia Road,no,True,6,123.32
+585572270,service,嘉四路,Jiasi Road,no,True,2,121.37
+585573711,service,嘉三路,Jiasan Road,no,True,5,120.24
+266188467,footway,,,,False,20,120.16
+585572293,footway,,,,False,6,118.44
+164316023,service,,,no,False,2,117.98
+266345024,service,嘉四路,Jiasi Road,no,True,2,117.88
+585571081,service,,,,True,2,117.68
+266188466,footway,,,,False,15,116.81
+266188453,footway,,,,False,33,114.42
+164316068,service,李庄环路,Lizhuanghuan Road,,True,6,113.39
+164316024,service,春归路,Chungui Road,,True,3,112.84
+264726762,pedestrian,,,no,False,20,112.52
+384531661,service,,,,True,7,111.48
+585572277,service,中央大道,Zhongyan Avenue,yes,True,2,111.31
+266221578,footway,,,,False,3,111.01
+1456430868,footway,,,,False,2,110.04
+585572300,footway,,,,False,9,109.39
+266345020,service,,,,False,3,107.69
+1377397390,service,嘉二路,Jiaer Road,yes,True,3,103.09
+857060543,pedestrian,栋梁大道,Dongliang Avenue,,False,2,103.01
+585572283,service,春归路,Chungui Road,,True,10,102.87
+585572285,service,中央大道,Zhongyan Avenue,yes,True,2,102.16
+135421965,footway,,,,False,2,102.13
+585572278,service,中央大道,Zhongyan Avenue,yes,True,4,101.70
+164316014,service,中央大道,Zhongyan Avenue,yes,True,5,101.61
+263913985,service,中央大道,Central Avenue,yes,True,2,101.58
+135372845,footway,,,,False,7,101.15
+135385547,service,中央大道,Central Avenue,yes,True,2,100.71
+266205941,service,,,,True,5,100.23
+585573741,service,同嘉大道,Tongjia Road,no,True,4,99.96
+263922901,service,,,no,True,6,99.86
+1457176856,service,,,,True,7,97.29
+1377397392,service,嘉二路,Jiaer Road,yes,True,3,94.55
+585572286,service,中央大道,Zhongyan Avenue,yes,True,3,93.61
+1457176857,service,,,,True,4,93.53
+266218622,footway,,,,False,25,93.49
+266161865,footway,,,,False,27,92.74
+168458392,footway,,,,False,3,92.15
+585573746,service,嘉园路,Jiayuan Road,no,True,8,92.05
+1461453007,service,,,,True,2,91.15
+585573707,service,中央大道,Zhongyan Avenue,yes,True,3,87.00
+266170485,footway,,,,False,3,86.91
+164316066,service,嘉园路,Jiayuan Road,no,True,7,85.37
+266207478,footway,,,,False,4,84.30
+164316046,service,嘉四路,Jiasi Road,no,True,3,83.76
+1456430869,footway,,,,False,6,80.35
+266170484,footway,,,,False,2,79.75
+263922899,service,,,no,True,8,77.91
+834486388,service,,,,True,3,76.93
+164316077,service,李庄环路,Lizhuanghuan Road,,True,2,76.77
+585572294,footway,,,,False,3,76.63
+135372843,footway,,,,False,6,74.61
+585573716,service,嘉二路,Jiaer Road,yes,True,3,72.93
+263913994,footway,,,,False,2,72.43
+993386740,service,,,yes,True,9,69.49
+1457176859,service,,,,True,6,64.14
+266188468,footway,,,,False,15,63.33
+585573742,service,嘉园路,Jiayuan Road,no,True,5,62.12
+164316028,service,,,,True,5,61.31
+585573715,service,嘉二路,Jiaer Road,yes,True,4,60.89
+585573718,service,嘉二路,Jiaer Road,yes,True,4,60.81
+585572298,footway,,,,False,5,60.60
+585572297,footway,,,,False,7,60.40
+993386741,service,同丙路,Tongbing Road,no,True,2,58.44
+585573713,service,嘉二路,Jiaer Road,yes,True,2,56.54
+830600182,service,,,no,True,4,55.48
+135372842,footway,,,,False,5,54.76
+266207479,footway,,,,False,2,52.52
+266218659,footway,,,,False,16,50.31
+135422201,footway,,,,False,2,46.70
+266218668,footway,,,,False,15,46.48
+263913995,footway,,,,False,3,45.71
+585572281,service,,,,True,4,43.38
+135372844,footway,,,,False,3,42.66
+1007363130,service,,,,True,2,41.41
+1456433063,service,,,,True,5,40.59
+266171112,footway,,,,False,2,39.74
+263913984,service,嘉一路,Jiayi Road,,False,2,38.36
+1456433064,service,,,,True,2,38.14
+263930562,service,,,,True,3,37.18
+135427150,footway,,,,False,2,35.27
+263913991,service,,,,False,9,34.93
+338789904,tertiary,昌吉东路,East Changji Road,yes,True,2,34.91
+164316011,service,嘉四路,Jiasi Road,no,True,2,34.76
+135404398,service,中央大道,Zhongyan Avenue,yes,True,2,34.51
+338789908,tertiary,昌吉东路,East Changji Road,yes,True,2,34.11
+135404399,service,中央大道,Zhongyan Avenue,yes,True,2,34.01
+266218624,footway,,,,False,21,33.93
+1456449346,trunk,曹安公路,Caoan Highway,yes,False,2,33.77
+585572288,service,,,,True,5,32.81
+266218645,footway,,,,False,3,32.18
+266188457,footway,,,,False,9,32.10
+266218643,footway,,,,False,3,30.54
+266171110,footway,,,,False,2,30.49
+266171111,footway,,,,False,2,30.49
+585572292,service,,,,True,5,30.41
+266171109,footway,,,,False,2,30.00
+266218648,footway,,,,False,21,29.26
+338789907,tertiary,昌吉东路,East Changji Road,yes,True,2,29.05
+266205936,footway,,,,False,3,28.86
+338789909,tertiary,昌吉东路,East Changji Road,yes,True,2,28.65
+264726764,footway,,,,False,2,28.47
+266188459,footway,,,,False,10,28.42
+164316051,service,嘉二路,Jiaer Road,yes,True,2,27.89
+164316004,service,嘉一路,Jiayi Road,,True,3,27.66
+164316074,service,嘉二路,Jiaer Road,yes,True,2,27.47
+585573710,service,嘉四路,Jiasi Road,no,True,2,27.13
+135382795,footway,,,,False,6,27.03
+135382792,footway,,,,False,5,26.37
+164316065,service,春归桥,Chungui Bridge,,True,2,26.18
+266188469,footway,,,,False,7,25.89
+164316031,service,同嘉大道,,,True,2,25.51
+993386746,service,绿环路,Lühuan Road,,True,2,25.41
+135382793,footway,,,,False,5,25.15
+263922900,service,,,no,True,2,25.15
+585572287,service,,,,True,4,24.65
+164316048,service,,,,True,2,24.36
+164316017,service,嘉三路,Jiasan Road,no,True,2,24.07
+266345022,service,,,,False,2,23.96
+266218655,footway,,,,False,7,23.83
+266218657,footway,,,,False,3,23.70
+266218675,footway,,,,False,2,23.08
+263930563,service,,,no,True,2,22.59
+1007363131,service,,,,True,2,21.56
+266218626,footway,,,,False,6,21.34
+585573743,service,嘉园路,Jiayuan Road,no,True,2,21.31
+834486389,service,,,,True,2,20.92
+266218632,footway,,,,False,4,20.59
+266218654,footway,,,,False,2,18.89
+135382790,footway,,,,False,4,18.53
+264726766,footway,,,,False,2,18.50
+266205939,footway,,,,False,6,18.32
+585572290,service,,,,True,5,18.25
+266171113,footway,,,,False,2,18.22
+585573737,service,同甲路,Tongjia Road,no,True,2,17.09
+266218638,footway,,,,False,4,16.77
+585572289,service,,,,True,3,16.44
+840500610,footway,,,,False,3,16.01
+266218652,footway,,,,False,4,16.01
+164316037,service,嘉二路,Jiaer Road,yes,True,3,15.33
+342007697,unclassified,,,,True,2,15.29
+164316006,service,嘉三路,Jiasan Road,no,True,3,14.84
+1461453005,service,,,,True,2,14.83
+585572273,service,,,,True,3,14.82
+264726763,pedestrian,栋梁大道,Dongliang Avenue,,False,2,13.67
+830600183,service,,,no,True,3,13.34
+266170488,footway,,,,False,3,13.19
+266218640,footway,,,,False,2,13.12
+266171114,footway,,,,False,2,13.00
+1461453004,service,,,,True,2,12.86
+342007693,unclassified,,,,True,2,12.71
+266218628,footway,,,,False,5,12.50
+266218646,footway,,,,False,2,12.03
+263913986,service,,,yes,True,2,11.96
+1047794606,unclassified,,,,True,2,11.87
+135404401,service,,,yes,True,2,11.61
+585573722,footway,,,,False,3,11.51
+585572302,service,嘉一路,Jiayi Road,,True,2,11.36
+135385546,service,,,,True,3,11.12
+1377397393,service,嘉二路,Jiaer Road,yes,True,2,11.02
+585572276,service,嘉三路,Jiasan Road,no,True,2,10.95
+266205935,service,,,,True,2,10.90
+1456432602,footway,,,,False,2,10.75
+585573706,service,,,,True,3,10.59
+164316039,service,,,,True,2,10.33
+263930564,service,,,,True,2,10.14
+266218661,footway,,,,False,5,9.99
+1047794583,service,绿环路,Lühuan Road,,True,2,9.73
+840500609,footway,,,,False,2,9.65
+585572274,service,嘉四路,Jiasi Road,no,True,2,9.62
+1047794581,unclassified,,,,True,2,9.43
+266218650,footway,,,,False,3,9.35
+585573705,service,,,,True,3,9.00
+585572291,service,,,,True,2,8.91
+266233215,footway,,,,False,2,8.69
+266170487,footway,,,,False,2,8.46
+585573744,service,嘉园路,Jiayuan Road,no,True,2,8.43
+585573719,service,同乙路,Tongyi Road,no,True,2,8.37
+266218671,footway,,,,False,3,7.95
+263913987,service,嘉一路,Jiayi Road,,True,2,7.43
+585573717,footway,,,,False,2,7.04
+585573714,service,同丙路,Tongbing Road,no,True,2,6.74
+1456432603,footway,,,,False,2,6.71
+266233216,footway,,,,False,2,6.62
+266218663,footway,,,,False,2,6.45
+266170490,footway,,,,False,2,5.44
+266218642,footway,,,,False,2,5.06
+585573745,service,嘉园路,Jiayuan Road,no,True,2,4.17
+266233214,footway,,,,False,2,4.14

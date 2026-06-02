@@ -1,0 +1,26 @@
+<launch>
+  <arg name="trajectory" default="straight"/>
+  <arg name="udp_ip" default="127.0.0.1"/>
+  <arg name="udp_port" default="5005"/>
+  <arg name="rate_hz" default="10.0"/>
+  <arg name="total_points" default="1000"/>
+  <arg name="chunk_size" default="80"/>
+  <arg name="publish_stride" default="80"/>
+  <arg name="loop" default="false"/>
+  <arg name="map_json_path" default="$(find trajectory_udp_sender)/export.json"/>
+
+  <node pkg="trajectory_udp_sender" type="trajectory_udp_node" name="trajectory_udp_node" output="screen">
+    <param name="trajectory" value="$(arg trajectory)"/>
+    <param name="udp_ip" value="$(arg udp_ip)"/>
+    <param name="udp_port" value="$(arg udp_port)"/>
+    <param name="rate_hz" value="$(arg rate_hz)"/>
+    <param name="total_points" value="$(arg total_points)"/>
+    <param name="chunk_size" value="$(arg chunk_size)"/>
+    <param name="publish_stride" value="$(arg publish_stride)"/>
+    <param name="loop" value="$(arg loop)"/>
+  </node>
+
+  <node pkg="trajectory_udp_sender" type="trajectory_visualizer_node" name="trajectory_visualizer_node" output="screen">
+    <param name="map_json_path" value="$(arg map_json_path)"/>
+  </node>
+</launch>
