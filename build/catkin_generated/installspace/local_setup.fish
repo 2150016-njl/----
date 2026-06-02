@@ -5,7 +5,7 @@
 # or fall back to the destination set at configure time
 
 if test -z $_CATKIN_SETUP_DIR
-    set _CATKIN_SETUP_DIR /home/nie/假人假车/install
+    set _CATKIN_SETUP_DIR /home/nie/----/install
 end
 
 set CATKIN_SETUP_UTIL_ARGS "--extend --local"

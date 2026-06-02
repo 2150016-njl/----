@@ -48,13 +48,15 @@ public:
     private_nh_.param<int>("udp_port", udp_port_, 5005);
     private_nh_.param<double>("rate_hz", rate_hz_, 10.0);
     private_nh_.param<int>("point_num", point_num_, 80);
-    private_nh_.param<double>("trajectory_length", trajectory_length_, 20.0);
+    // 修正：将全局总长度调整为 100米
+    private_nh_.param<double>("trajectory_length", trajectory_length_, 100.0);
     private_nh_.param<double>("ego_x", ego_x_, 0.0);
     private_nh_.param<double>("ego_y", ego_y_, 0.0);
     private_nh_.param<double>("ego_heading", ego_heading_, 0.0);
     private_nh_.param<double>("lane_width", lane_width_, 3.5);
     private_nh_.param<double>("turn_radius", turn_radius_, 12.0);
-    private_nh_.param<double>("speed", speed_, 5.0);
+    // 修正：将目标速度调整为 3.0m/s
+    private_nh_.param<double>("speed", speed_, 3.0);
     private_nh_.param<double>("dt", dt_, 0.1);
     private_nh_.param<std::string>("endian", endian_, "big");
     private_nh_.param<bool>("include_flags_in_udp", include_flags_in_udp_, false);
@@ -88,7 +90,9 @@ public:
                                                      ego_x_,
                                                      ego_y_,
                                                      ego_heading_,
-                                                     point_num_,
+                                                     // 将总生成点数按比例放大 (长度/速度/频率) 
+                                                     // 确保有足够多的点用于模拟滑动
+                                                     static_cast<int>(trajectory_length_ / (speed_ * dt_)) + 1,
                                                      trajectory_length_,
                                                      lane_width_,
                                                      turn_radius_,
@@ -125,25 +129,54 @@ public:
   {
     ros::Rate rate(rate_hz_);
     uint32_t packet_index = 0;
+    size_t start_index = 0; // 新增：滑移窗口的起点索引
+
     while (ros::ok())
     {
-      const ros::Time stamp = ros::Time::now();
-      const auto payload = packPacket(trajectory_.points, static_cast<uint16_t>(packet_index & 0xFFFF));
+      // 提取出当前要发送的局部 80 个点
+      std::vector<ego_trajectory_udp::TrajectoryPoint> chunk;
+      chunk.reserve(point_num_);
+      for (int i = 0; i < point_num_; ++i)
+      {
+        size_t idx = start_index + i;
+        if (idx < trajectory_.points.size())
+        {
+          chunk.push_back(trajectory_.points[idx]);
+        }
+        else 
+        {
+          chunk.push_back(trajectory_.points.back()); // 走到头后用最后一个点补齐
+        }
+      }
 
-      global_path_pub_.publish(ego_trajectory_udp::makePath(trajectory_.points, frame_id_, stamp));
-      local_path_pub_.publish(ego_trajectory_udp::makePath(trajectory_.points, frame_id_, stamp));
+      const ros::Time stamp = ros::Time::now();
+      const auto payload = packPacket(chunk, static_cast<uint16_t>(packet_index & 0xFFFF));
+
+      local_path_pub_.publish(ego_trajectory_udp::makePath(chunk, frame_id_, stamp));
       publishAndSend(payload, buildInfoJson(packet_index, payload.size()));
 
       ROS_INFO_THROTTLE(1.0,
-                        "sent %s fixed points=%zu payload=%zu counter=%u packet_index=%u",
+                        "sent %s fixed points=%zu payload=%zu counter=%u packet_index=%u start_idx=%zu",
                         trajectory_.name.c_str(),
-                        trajectory_.points.size(),
+                        chunk.size(),
                         payload.size(),
                         static_cast<unsigned int>(counter_),
-                        packet_index);
+                        packet_index,
+                        start_index);
 
       counter_ = static_cast<uint8_t>((counter_ + 1) & 0xFF);
       ++packet_index;
+
+      // 让起点每 0.1 秒前移一个点（等于车辆前进速度）
+      if (start_index < trajectory_.points.size() - 1)
+      {
+        start_index++;
+      }
+      else
+      {
+        start_index = 0; // 跑完循环测试
+      }
+
       ros::spinOnce();
       rate.sleep();
     }
@@ -295,7 +328,7 @@ private:
     std::ostringstream oss;
     oss << "{"
         << "\"counter\":" << static_cast<int>(counter_) << ","
-        << "\"fixed_point_num\":" << trajectory_.points.size() << ","
+        << "\"fixed_point_num\":" << point_num_ << ","
         << "\"include_flags_in_udp\":" << (include_flags_in_udp_ ? "true" : "false") << ","
         << "\"packet_flag\":" << static_cast<int>(kPacketFlagSingle) << ","
         << "\"packet_index\":" << packet_index << ","
@@ -318,13 +351,13 @@ private:
   int udp_port_ = 5005;
   double rate_hz_ = 10.0;
   int point_num_ = 80;
-  double trajectory_length_ = 20.0;
+  double trajectory_length_ = 100.0;
   double ego_x_ = 0.0;
   double ego_y_ = 0.0;
   double ego_heading_ = 0.0;
   double lane_width_ = 3.5;
   double turn_radius_ = 12.0;
-  double speed_ = 5.0;
+  double speed_ = 3.0;
   double dt_ = 0.1;
   std::string endian_ = "big";
   bool include_flags_in_udp_ = false;

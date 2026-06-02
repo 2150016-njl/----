@@ -1,4 +1,4 @@
-prefix=/home/nie/假人假车/install
+prefix=/home/nie/----/install
 
 Name: trajectory_udp_sender
 Description: Description of trajectory_udp_sender

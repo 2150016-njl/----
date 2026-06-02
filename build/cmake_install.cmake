@@ -1,8 +1,8 @@
-# Install script for directory: /home/nie/假人假车/src
+# Install script for directory: /home/nie/----/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/nie/假人假车/install")
+  set(CMAKE_INSTALL_PREFIX "/home/nie/----/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -49,104 +49,105 @@ endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/nie/假人假车/install/_setup_util.py")
+   "/home/nie/----/install/_setup_util.py")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/nie/假人假车/install" TYPE PROGRAM FILES "/home/nie/假人假车/build/catkin_generated/installspace/_setup_util.py")
+file(INSTALL DESTINATION "/home/nie/----/install" TYPE PROGRAM FILES "/home/nie/----/build/catkin_generated/installspace/_setup_util.py")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/nie/假人假车/install/env.sh")
+   "/home/nie/----/install/env.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/nie/假人假车/install" TYPE PROGRAM FILES "/home/nie/假人假车/build/catkin_generated/installspace/env.sh")
+file(INSTALL DESTINATION "/home/nie/----/install" TYPE PROGRAM FILES "/home/nie/----/build/catkin_generated/installspace/env.sh")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/nie/假人假车/install/setup.bash;/home/nie/假人假车/install/local_setup.bash")
+   "/home/nie/----/install/setup.bash;/home/nie/----/install/local_setup.bash")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/nie/假人假车/install" TYPE FILE FILES
-    "/home/nie/假人假车/build/catkin_generated/installspace/setup.bash"
-    "/home/nie/假人假车/build/catkin_generated/installspace/local_setup.bash"
+file(INSTALL DESTINATION "/home/nie/----/install" TYPE FILE FILES
+    "/home/nie/----/build/catkin_generated/installspace/setup.bash"
+    "/home/nie/----/build/catkin_generated/installspace/local_setup.bash"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/nie/假人假车/install/setup.sh;/home/nie/假人假车/install/local_setup.sh")
+   "/home/nie/----/install/setup.sh;/home/nie/----/install/local_setup.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/nie/假人假车/install" TYPE FILE FILES
-    "/home/nie/假人假车/build/catkin_generated/installspace/setup.sh"
-    "/home/nie/假人假车/build/catkin_generated/installspace/local_setup.sh"
+file(INSTALL DESTINATION "/home/nie/----/install" TYPE FILE FILES
+    "/home/nie/----/build/catkin_generated/installspace/setup.sh"
+    "/home/nie/----/build/catkin_generated/installspace/local_setup.sh"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/nie/假人假车/install/setup.zsh;/home/nie/假人假车/install/local_setup.zsh")
+   "/home/nie/----/install/setup.zsh;/home/nie/----/install/local_setup.zsh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/nie/假人假车/install" TYPE FILE FILES
-    "/home/nie/假人假车/build/catkin_generated/installspace/setup.zsh"
-    "/home/nie/假人假车/build/catkin_generated/installspace/local_setup.zsh"
+file(INSTALL DESTINATION "/home/nie/----/install" TYPE FILE FILES
+    "/home/nie/----/build/catkin_generated/installspace/setup.zsh"
+    "/home/nie/----/build/catkin_generated/installspace/local_setup.zsh"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/nie/假人假车/install/setup.fish;/home/nie/假人假车/install/local_setup.fish")
+   "/home/nie/----/install/setup.fish;/home/nie/----/install/local_setup.fish")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/nie/假人假车/install" TYPE FILE FILES
-    "/home/nie/假人假车/build/catkin_generated/installspace/setup.fish"
-    "/home/nie/假人假车/build/catkin_generated/installspace/local_setup.fish"
+file(INSTALL DESTINATION "/home/nie/----/install" TYPE FILE FILES
+    "/home/nie/----/build/catkin_generated/installspace/setup.fish"
+    "/home/nie/----/build/catkin_generated/installspace/local_setup.fish"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/nie/假人假车/install/.rosinstall")
+   "/home/nie/----/install/.rosinstall")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/nie/假人假车/install" TYPE FILE FILES "/home/nie/假人假车/build/catkin_generated/installspace/.rosinstall")
+file(INSTALL DESTINATION "/home/nie/----/install" TYPE FILE FILES "/home/nie/----/build/catkin_generated/installspace/.rosinstall")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/nie/假人假车/build/gtest/cmake_install.cmake")
-  include("/home/nie/假人假车/build/trajectory_track/cmake_install.cmake")
+  include("/home/nie/----/build/gtest/cmake_install.cmake")
+  include("/home/nie/----/build/ego_trajectory_udp/cmake_install.cmake")
+  include("/home/nie/----/build/trajectory_track/cmake_install.cmake")
 
 endif()
 
@@ -158,5 +159,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/nie/假人假车/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/nie/----/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

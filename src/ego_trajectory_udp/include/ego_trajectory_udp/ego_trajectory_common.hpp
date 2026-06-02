@@ -44,7 +44,7 @@ inline double headingFromDelta(double dx, double dy)
   {
     return 0.0;
   }
-  return normalizeHeadingDeg(std::atan2(dx, dy) * 180.0 / kPi);
+  return normalizeHeadingDeg(std::atan2(dy, dx) * 180.0 / kPi);
 }
 
 inline geometry_msgs::Quaternion yawToQuaternion(double yaw_rad)
@@ -65,29 +65,21 @@ inline void egoLocalToMap(double ego_x,
                           double& x,
                           double& y)
 {
-  const double h = ego_heading_deg * kPi / 180.0;
-  const double fx = std::sin(h);
-  const double fy = std::cos(h);
-  const double lx = -std::cos(h);
-  const double ly = std::sin(h);
+  const double yaw = ego_heading_deg * kPi / 180.0;
+  const double fx = std::cos(yaw);
+  const double fy = std::sin(yaw);
+  const double lx = -std::sin(yaw);
+  const double ly = std::cos(yaw);
+  
   x = ego_x + forward_m * fx + left_m * lx;
   y = ego_y + forward_m * fy + left_m * ly;
 }
 
 inline uint8_t trajectoryId(const std::string& name)
 {
-  if (name == "straight")
-  {
-    return 1;
-  }
-  if (name == "left_lane_change")
-  {
-    return 2;
-  }
-  if (name == "right_turn")
-  {
-    return 3;
-  }
+  if (name == "straight") return 1;
+  if (name == "left_lane_change") return 2;
+  if (name == "right_turn") return 3;
   return 0;
 }
 
@@ -118,10 +110,14 @@ inline std::vector<TrajectoryPoint> generateBasePoints(const std::string& name,
   std::vector<TrajectoryPoint> points;
   points.reserve(static_cast<size_t>(point_num));
 
+  // 机动参数设定
+  const double lc_length_m = 30.0; // 设定换道动作在30米内完成
+  const double turn_arc_length = 0.5 * kPi * turn_radius_m; // 90度标准右转的圆弧长度
+
   for (int i = 0; i < point_num; ++i)
   {
     const double ratio = static_cast<double>(i) / static_cast<double>(point_num - 1);
-    const double s = ratio * length_m;
+    const double s = ratio * length_m; // 车辆当前累计行驶里程
     double forward = s;
     double left = 0.0;
 
@@ -131,13 +127,27 @@ inline std::vector<TrajectoryPoint> generateBasePoints(const std::string& name,
     }
     else if (name == "left_lane_change")
     {
-      left = 0.5 * lane_width_m * (1.0 - std::cos(kPi * ratio));
+      if (s <= lc_length_m) {
+        // 在 30 米范围内完成平滑变道余弦曲线
+        left = 0.5 * lane_width_m * (1.0 - std::cos(kPi * (s / lc_length_m)));
+      } else {
+        // 超过 30 米后，保持变道后的横向偏移量，直线行驶
+        left = lane_width_m;
+      }
     }
     else if (name == "right_turn")
     {
-      const double phi = s / turn_radius_m;
-      forward = turn_radius_m * std::sin(phi);
-      left = -turn_radius_m * (1.0 - std::cos(phi));
+      if (s <= turn_arc_length) {
+        // 处于 90 度右转圆弧中
+        const double phi = s / turn_radius_m;
+        forward = turn_radius_m * std::sin(phi);
+        left = -turn_radius_m * (1.0 - std::cos(phi));
+      } else {
+        // 完成 90 度右转后，沿着切线（局部 -Y 轴）方向继续直线行驶
+        const double remain_s = s - turn_arc_length;
+        forward = turn_radius_m;           // 前向坐标定格在转弯半径处
+        left = -turn_radius_m - remain_s;  // 沿着向右的方向直线延伸
+      }
     }
     else
     {
@@ -152,6 +162,7 @@ inline std::vector<TrajectoryPoint> generateBasePoints(const std::string& name,
     points.push_back(p);
   }
 
+  // 计算航向角
   for (size_t i = 0; i < points.size(); ++i)
   {
     double dx = 0.0;
@@ -213,7 +224,7 @@ inline geometry_msgs::PoseStamped pointToPose(const TrajectoryPoint& point,
   pose.pose.position.x = point.x;
   pose.pose.position.y = point.y;
   pose.pose.position.z = 0.0;
-  const double yaw = (90.0 - point.heading_deg) * kPi / 180.0;
+  const double yaw = point.heading_deg * kPi / 180.0; 
   pose.pose.orientation = yawToQuaternion(yaw);
   return pose;
 }

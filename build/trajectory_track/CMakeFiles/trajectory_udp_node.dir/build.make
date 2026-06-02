@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/nie/假人假车/src
+CMAKE_SOURCE_DIR = /home/nie/----/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/nie/假人假车/build
+CMAKE_BINARY_DIR = /home/nie/----/build
 
 # Include any dependencies generated for this target.
 include trajectory_track/CMakeFiles/trajectory_udp_node.dir/depend.make
@@ -58,17 +58,17 @@ include trajectory_track/CMakeFiles/trajectory_udp_node.dir/progress.make
 include trajectory_track/CMakeFiles/trajectory_udp_node.dir/flags.make
 
 trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o: trajectory_track/CMakeFiles/trajectory_udp_node.dir/flags.make
-trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o: /home/nie/假人假车/src/trajectory_track/src/trajectory_udp_node.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nie/假人假车/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o"
-	cd /home/nie/假人假车/build/trajectory_track && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o -c /home/nie/假人假车/src/trajectory_track/src/trajectory_udp_node.cpp
+trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o: /home/nie/----/src/trajectory_track/src/trajectory_udp_node.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nie/----/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o"
+	cd /home/nie/----/build/trajectory_track && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o -c /home/nie/----/src/trajectory_track/src/trajectory_udp_node.cpp
 
 trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.i"
-	cd /home/nie/假人假车/build/trajectory_track && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nie/假人假车/src/trajectory_track/src/trajectory_udp_node.cpp > CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.i
+	cd /home/nie/----/build/trajectory_track && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nie/----/src/trajectory_track/src/trajectory_udp_node.cpp > CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.i
 
 trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.s"
-	cd /home/nie/假人假车/build/trajectory_track && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nie/假人假车/src/trajectory_track/src/trajectory_udp_node.cpp -o CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.s
+	cd /home/nie/----/build/trajectory_track && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nie/----/src/trajectory_track/src/trajectory_udp_node.cpp -o CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.s
 
 # Object files for target trajectory_udp_node
 trajectory_udp_node_OBJECTS = \
@@ -77,39 +77,39 @@ trajectory_udp_node_OBJECTS = \
 # External object files for target trajectory_udp_node
 trajectory_udp_node_EXTERNAL_OBJECTS =
 
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: trajectory_track/CMakeFiles/trajectory_udp_node.dir/build.make
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libroscpp.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libpthread.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librosconsole.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librosconsole_log4cxx.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librosconsole_backend_interface.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libxmlrpcpp.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libroscpp_serialization.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librostime.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libcpp_common.so
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
-/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node: trajectory_track/CMakeFiles/trajectory_udp_node.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/nie/假人假车/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node"
-	cd /home/nie/假人假车/build/trajectory_track && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/trajectory_udp_node.dir/link.txt --verbose=$(VERBOSE)
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: trajectory_track/CMakeFiles/trajectory_udp_node.dir/src/trajectory_udp_node.cpp.o
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: trajectory_track/CMakeFiles/trajectory_udp_node.dir/build.make
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libroscpp.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libpthread.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librosconsole.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librosconsole_log4cxx.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librosconsole_backend_interface.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libxmlrpcpp.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libroscpp_serialization.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/librostime.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /opt/ros/noetic/lib/libcpp_common.so
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
+/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node: trajectory_track/CMakeFiles/trajectory_udp_node.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/nie/----/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node"
+	cd /home/nie/----/build/trajectory_track && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/trajectory_udp_node.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
-trajectory_track/CMakeFiles/trajectory_udp_node.dir/build: /home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_udp_node
+trajectory_track/CMakeFiles/trajectory_udp_node.dir/build: /home/nie/----/devel/lib/trajectory_udp_sender/trajectory_udp_node
 
 .PHONY : trajectory_track/CMakeFiles/trajectory_udp_node.dir/build
 
 trajectory_track/CMakeFiles/trajectory_udp_node.dir/clean:
-	cd /home/nie/假人假车/build/trajectory_track && $(CMAKE_COMMAND) -P CMakeFiles/trajectory_udp_node.dir/cmake_clean.cmake
+	cd /home/nie/----/build/trajectory_track && $(CMAKE_COMMAND) -P CMakeFiles/trajectory_udp_node.dir/cmake_clean.cmake
 .PHONY : trajectory_track/CMakeFiles/trajectory_udp_node.dir/clean
 
 trajectory_track/CMakeFiles/trajectory_udp_node.dir/depend:
-	cd /home/nie/假人假车/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/nie/假人假车/src /home/nie/假人假车/src/trajectory_track /home/nie/假人假车/build /home/nie/假人假车/build/trajectory_track /home/nie/假人假车/build/trajectory_track/CMakeFiles/trajectory_udp_node.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/nie/----/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/nie/----/src /home/nie/----/src/trajectory_track /home/nie/----/build /home/nie/----/build/trajectory_track /home/nie/----/build/trajectory_track/CMakeFiles/trajectory_udp_node.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : trajectory_track/CMakeFiles/trajectory_udp_node.dir/depend
 

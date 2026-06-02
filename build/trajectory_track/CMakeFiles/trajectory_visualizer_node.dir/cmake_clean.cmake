@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_visualizer_node"
-  "/home/nie/假人假车/devel/lib/trajectory_udp_sender/trajectory_visualizer_node.pdb"
+  "/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_visualizer_node"
+  "/home/nie/----/devel/lib/trajectory_udp_sender/trajectory_visualizer_node.pdb"
   "CMakeFiles/trajectory_visualizer_node.dir/src/trajectory_visualizer_node.cpp.o"
 )
 

@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/nie/假人假车/src/trajectory_track/include/trajectory_udp_sender/trajectory_common.hpp
+/home/nie/----/src/trajectory_track/include/trajectory_udp_sender/trajectory_common.hpp
 algorithm
 -
 cmath
@@ -22,7 +22,7 @@ utility
 vector
 -
 
-/home/nie/假人假车/src/trajectory_track/src/trajectory_visualizer_node.cpp
+/home/nie/----/src/trajectory_track/src/trajectory_visualizer_node.cpp
 geometry_msgs/Point.h
 -
 nav_msgs/Path.h
@@ -46,7 +46,7 @@ string
 vector
 -
 trajectory_udp_sender/trajectory_common.hpp
-/home/nie/假人假车/src/trajectory_track/src/trajectory_udp_sender/trajectory_common.hpp
+/home/nie/----/src/trajectory_track/src/trajectory_udp_sender/trajectory_common.hpp
 
 /opt/ros/noetic/include/geometry_msgs/Point.h
 string

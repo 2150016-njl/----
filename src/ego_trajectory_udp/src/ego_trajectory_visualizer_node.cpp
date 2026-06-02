@@ -44,26 +44,7 @@ visualization_msgs::Marker baseMarker(const std::string& frame_id,
   return marker;
 }
 
-visualization_msgs::Marker pathLine(const nav_msgs::Path& path,
-                                    const std::string& frame_id,
-                                    const ros::Time& stamp,
-                                    const std::string& ns,
-                                    int id,
-                                    const std_msgs::ColorRGBA& c,
-                                    double width,
-                                    double z)
-{
-  auto marker = baseMarker(frame_id, stamp, ns, id, visualization_msgs::Marker::LINE_STRIP);
-  marker.scale.x = width;
-  marker.color = c;
-  marker.points.reserve(path.poses.size());
-  for (const auto& pose : path.poses)
-  {
-    marker.points.push_back(makePoint(pose.pose.position.x, pose.pose.position.y, z));
-  }
-  return marker;
-}
-
+// 修正：全部统一为绘制散点（用于绘制全局绿点和局部红点）
 visualization_msgs::Marker pathPoints(const nav_msgs::Path& path,
                                       const std::string& frame_id,
                                       const ros::Time& stamp,
@@ -121,27 +102,41 @@ private:
 
     if (have_global_path_)
     {
+      // 1. 全局路径点（绿色）
       markers.markers.push_back(
-          pathLine(global_path_, frame_id_, stamp, "global_path", 0, color(0.1, 0.35, 1.0, 1.0), 0.18, 0.02));
+          pathPoints(global_path_, frame_id_, stamp, "global_path_points", 0, color(0.0, 1.0, 0.0, 1.0), 0.2, 0.01));
+
       if (!global_path_.poses.empty())
       {
-        auto start = baseMarker(frame_id_, stamp, "ego_start", 1, visualization_msgs::Marker::SPHERE);
-        start.scale.x = 0.7;
-        start.scale.y = 0.7;
-        start.scale.z = 0.7;
-        start.color = color(0.0, 0.9, 0.2, 1.0);
-        start.pose.position = global_path_.poses.front().pose.position;
-        start.pose.position.z = 0.25;
-        markers.markers.push_back(start);
+        const auto& start_pose = global_path_.poses.front().pose;
+
+        // 2. 起点位置（蓝色的球）
+        auto start_pt = baseMarker(frame_id_, stamp, "ego_start_point", 1, visualization_msgs::Marker::SPHERE);
+        start_pt.scale.x = 0.5;
+        start_pt.scale.y = 0.5;
+        start_pt.scale.z = 0.5;
+        start_pt.color = color(0.0, 0.5, 1.0, 1.0);
+        start_pt.pose = start_pose;
+        start_pt.pose.position.z = 0.1;
+        markers.markers.push_back(start_pt);
+
+        // 3. 初始航向（亮黄色的指示箭头）
+        auto arrow = baseMarker(frame_id_, stamp, "ego_start_arrow", 2, visualization_msgs::Marker::ARROW);
+        arrow.scale.x = 2.5;  // 箭头总长度
+        arrow.scale.y = 0.4;  // 箭头粗细
+        arrow.scale.z = 0.4;
+        arrow.color = color(1.0, 1.0, 0.0, 1.0);
+        arrow.pose = start_pose;
+        arrow.pose.position.z = 0.2;
+        markers.markers.push_back(arrow);
       }
     }
 
     if (have_local_path_)
     {
+      // 4. 局部轨迹点（红色）
       markers.markers.push_back(
-          pathLine(local_path_, frame_id_, stamp, "local_path_80", 2, color(1.0, 0.25, 0.0, 1.0), 0.32, 0.08));
-      markers.markers.push_back(
-          pathPoints(local_path_, frame_id_, stamp, "local_points_80", 3, color(1.0, 0.85, 0.0, 1.0), 0.22, 0.12));
+          pathPoints(local_path_, frame_id_, stamp, "local_path_points", 3, color(1.0, 0.0, 0.0, 1.0), 0.35, 0.05));
     }
 
     marker_pub_.publish(markers);

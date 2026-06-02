@@ -7,6 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export LD_LIBRARY_PATH='/opt/ros/noetic/lib:/usr/local/cuda-11.8/lib64:/home/nie/TensorRT-8.5.3.1/lib'
-export PKG_CONFIG_PATH='/opt/ros/noetic/lib/pkgconfig'
-export PWD='/home/nie/假人假车/build'
+export PWD='/home/nie/----/build'

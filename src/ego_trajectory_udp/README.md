@@ -31,14 +31,7 @@ source devel/setup.bash
 ## 启动
 
 ```bash
-roslaunch ego_trajectory_udp ego_trajectory_demo.launch \
-  trajectory:=left_lane_change \
-  ego_x:=0.0 \
-  ego_y:=0.0 \
-  ego_heading:=90.0 \
-  udp_ip:=192.168.1.100 \
-  udp_port:=5005 \
-  rate_hz:=10
+roslaunch ego_trajectory_udp ego_trajectory_demo.launch
 ```
 
 ## ROS 话题
