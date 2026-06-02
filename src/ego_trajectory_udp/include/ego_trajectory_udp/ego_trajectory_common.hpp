@@ -6,7 +6,9 @@
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -92,7 +94,8 @@ inline std::vector<TrajectoryPoint> generateBasePoints(const std::string& name,
                                                        double lane_width_m,
                                                        double turn_radius_m,
                                                        double speed_mps,
-                                                       double dt)
+                                                       double dt,
+                                                       double accel_time_s)
 {
   if (point_num < 2)
   {
@@ -156,9 +159,18 @@ inline std::vector<TrajectoryPoint> generateBasePoints(const std::string& name,
 
     TrajectoryPoint p;
     egoLocalToMap(ego_x, ego_y, ego_heading_deg, forward, left, p.x, p.y);
-    p.vx = speed_mps;
-    p.ax = 0.0;
     p.time_s = static_cast<double>(i) * dt;
+    if (accel_time_s > 1e-6)
+    {
+      const double accel_ratio = std::min(p.time_s / accel_time_s, 1.0);
+      p.vx = speed_mps * accel_ratio;
+      p.ax = accel_ratio < 1.0 ? speed_mps / accel_time_s : 0.0;
+    }
+    else
+    {
+      p.vx = speed_mps;
+      p.ax = 0.0;
+    }
     points.push_back(p);
   }
 
@@ -192,7 +204,8 @@ inline Trajectory makeTrajectory(const std::string& name,
                                  double lane_width_m,
                                  double turn_radius_m,
                                  double speed_mps,
-                                 double dt)
+                                 double dt,
+                                 double accel_time_s)
 {
   Trajectory trajectory;
   trajectory.name = name;
@@ -210,7 +223,8 @@ inline Trajectory makeTrajectory(const std::string& name,
                                          lane_width_m,
                                          turn_radius_m,
                                          speed_mps,
-                                         dt);
+                                         dt,
+                                         accel_time_s);
   return trajectory;
 }
 

@@ -1,57 +1,76 @@
 # ego_trajectory_udp
 
-不解析地图，直接根据初始 ego 位姿生成 20 m 全局轨迹，并以固定 80 点数组定频发布 ROS Path 和 UDP payload。
+根据初始 ego 位姿生成轨迹，发布 ROS Path，并按 80 点固定数组打包 UDP。
 
-## 轨迹类型
+## 轨迹
 
-参数 `trajectory` 可选：
-
-```text
-straight          直行
-left_lane_change  左换道
-right_turn        右转
-```
-
-初始位姿参数：
+`trajectory` 可选：
 
 ```text
-ego_x       起点 x
-ego_y       起点 y
-ego_heading 起点 heading，单位 deg，0 指北，90 指东
+straight
+left_lane_change
+right_turn
 ```
 
-## 编译
+输入初始位姿：
 
-```bash
-cd ~/catkin_ws
-catkin_make
-source devel/setup.bash
+```text
+ego_x
+ego_y
+ego_heading   # deg，当前代码约定 0 沿 +x，90 沿 +y
+```
+
+全局轨迹起步阶段会从 `0` 加速到 `speed`：
+
+```text
+accel_time    # 默认 2.0 s
+speed         # 默认 3.0 m/s
+```
+
+## 局部轨迹更新模式
+
+`local_update_mode:=1`
+
+```text
+内部运动学模型更新 ego 位置
+根据 ego 当前位置投影到全局路径
+取最近路径点之后的 80 个点作为当前局部轨迹
+```
+
+`local_update_mode:=2`
+
+```text
+全程发布初始 80 点局部轨迹
 ```
 
 ## 启动
 
 ```bash
-roslaunch ego_trajectory_udp ego_trajectory_demo.launch
+roslaunch ego_trajectory_udp ego_trajectory_demo.launch \
+  trajectory:=right_turn \
+  ego_x:=0.0 \
+  ego_y:=5.0 \
+  ego_heading:=-90.0 \
+  trajectory_length:=100.0 \
+  speed:=3.0 \
+  accel_time:=2.0 \
+  local_update_mode:=1 \
+  udp_ip:=127.0.0.1 \
+  udp_port:=5005 \
+  rate_hz:=10
 ```
 
 ## ROS 话题
 
-发布节点：
-
 ```text
-/trajectory_global_path   nav_msgs/Path，80 点全局路径
-/trajectory_local_path    nav_msgs/Path，当前 80 点局部路径
-/trajectory_udp_payload   std_msgs/UInt8MultiArray，UDP payload 字节
-/trajectory_packet_info   std_msgs/String，JSON 调试信息
-```
-
-RViz 可视化节点：
-
-```text
+/trajectory_global_path   nav_msgs/Path
+/trajectory_local_path    nav_msgs/Path，80 点局部轨迹
+/trajectory_udp_payload   std_msgs/UInt8MultiArray
+/trajectory_packet_info   std_msgs/String
 /ego_trajectory_markers   visualization_msgs/MarkerArray
 ```
 
-RViz 设置：
+RViz：
 
 ```text
 Fixed Frame: map
@@ -61,20 +80,14 @@ Topic -> /ego_trajectory_markers
 
 ## UDP
 
-默认每包固定 80 点：
+默认 payload：
 
 ```text
 8 + 16 * 80 = 1288 bytes
 ```
 
-若设置 `include_flags_in_udp:=true`，会在 `point_num` 后增加：
+点字段：
 
 ```text
-trajectory_id:uint8 + packet_flag:uint8 + packet_index:uint16
-```
-
-此时：
-
-```text
-12 + 16 * 80 = 1292 bytes
+x, y, heading, vx, ax, time
 ```

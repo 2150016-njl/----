@@ -48,16 +48,16 @@ public:
     private_nh_.param<int>("udp_port", udp_port_, 5005);
     private_nh_.param<double>("rate_hz", rate_hz_, 10.0);
     private_nh_.param<int>("point_num", point_num_, 80);
-    // 修正：将全局总长度调整为 100米
     private_nh_.param<double>("trajectory_length", trajectory_length_, 100.0);
     private_nh_.param<double>("ego_x", ego_x_, 0.0);
     private_nh_.param<double>("ego_y", ego_y_, 0.0);
     private_nh_.param<double>("ego_heading", ego_heading_, 0.0);
     private_nh_.param<double>("lane_width", lane_width_, 3.5);
     private_nh_.param<double>("turn_radius", turn_radius_, 12.0);
-    // 修正：将目标速度调整为 3.0m/s
     private_nh_.param<double>("speed", speed_, 3.0);
+    private_nh_.param<double>("accel_time", accel_time_, 2.0);
     private_nh_.param<double>("dt", dt_, 0.1);
+    private_nh_.param<int>("local_update_mode", local_update_mode_, 1);
     private_nh_.param<std::string>("endian", endian_, "big");
     private_nh_.param<bool>("include_flags_in_udp", include_flags_in_udp_, false);
     private_nh_.param<bool>("include_link_header", include_link_header_, false);
@@ -65,39 +65,26 @@ public:
     private_nh_.param<int>("version", version_, 0xF0);
     private_nh_.param<int>("message_id", message_id_, 4);
 
-    if (point_num_ != 80)
-    {
-      ROS_WARN("point_num=%d, expected 80 for chassis fixed trajectory array", point_num_);
-    }
-    if (point_num_ <= 0)
-    {
-      throw std::runtime_error("~point_num must be positive");
-    }
-    if (rate_hz_ <= 0.0)
-    {
-      throw std::runtime_error("~rate_hz must be positive");
-    }
-    if (udp_port_ <= 0 || udp_port_ > 65535)
-    {
-      throw std::runtime_error("~udp_port must be in 1..65535");
-    }
-    if (endian_ != "big" && endian_ != "little")
-    {
-      throw std::runtime_error("~endian must be 'big' or 'little'");
-    }
+    validateParams();
 
+    const int global_point_num =
+        std::max(point_num_, static_cast<int>(std::ceil(trajectory_length_ / std::max(speed_ * dt_, 0.01))) + 1);
     trajectory_ = ego_trajectory_udp::makeTrajectory(trajectory_name_,
                                                      ego_x_,
                                                      ego_y_,
                                                      ego_heading_,
-                                                     // 将总生成点数按比例放大 (长度/速度/频率) 
-                                                     // 确保有足够多的点用于模拟滑动
-                                                     static_cast<int>(trajectory_length_ / (speed_ * dt_)) + 1,
+                                                     global_point_num,
                                                      trajectory_length_,
                                                      lane_width_,
                                                      turn_radius_,
                                                      speed_,
-                                                     dt_);
+                                                     dt_,
+                                                     accel_time_);
+
+    sim_x_ = ego_x_;
+    sim_y_ = ego_y_;
+    sim_heading_ = ego_heading_;
+    sim_speed_ = 0.0;
 
     payload_pub_ = nh_.advertise<std_msgs::UInt8MultiArray>("trajectory_udp_payload", 10);
     info_pub_ = nh_.advertise<std_msgs::String>("trajectory_packet_info", 10);
@@ -107,14 +94,15 @@ public:
     openSocket();
     publishGlobalPath();
 
-    ROS_INFO("ego trajectory selected=%s id=%u points=%zu length=%.2f ego=(%.3f, %.3f, %.3fdeg)",
+    ROS_INFO("ego trajectory=%s id=%u global_points=%zu local_points=%d length=%.2f speed=%.2f accel_time=%.2f mode=%d",
              trajectory_.name.c_str(),
              static_cast<unsigned int>(trajectory_.id),
              trajectory_.points.size(),
+             point_num_,
              trajectory_length_,
-             ego_x_,
-             ego_y_,
-             ego_heading_);
+             speed_,
+             accel_time_,
+             local_update_mode_);
   }
 
   ~EgoTrajectoryUdpNode()
@@ -128,61 +116,76 @@ public:
   void run()
   {
     ros::Rate rate(rate_hz_);
+    const double update_dt = 1.0 / rate_hz_;
     uint32_t packet_index = 0;
-    size_t start_index = 0; // 新增：滑移窗口的起点索引
 
     while (ros::ok())
     {
-      // 提取出当前要发送的局部 80 个点
-      std::vector<ego_trajectory_udp::TrajectoryPoint> chunk;
-      chunk.reserve(point_num_);
-      for (int i = 0; i < point_num_; ++i)
-      {
-        size_t idx = start_index + i;
-        if (idx < trajectory_.points.size())
-        {
-          chunk.push_back(trajectory_.points[idx]);
-        }
-        else 
-        {
-          chunk.push_back(trajectory_.points.back()); // 走到头后用最后一个点补齐
-        }
-      }
-
+      const size_t start_index = local_update_mode_ == 1 ? nearestPathIndex(sim_x_, sim_y_) : 0;
+      const auto chunk = makeLocalChunk(start_index);
       const ros::Time stamp = ros::Time::now();
       const auto payload = packPacket(chunk, static_cast<uint16_t>(packet_index & 0xFFFF));
 
       local_path_pub_.publish(ego_trajectory_udp::makePath(chunk, frame_id_, stamp));
-      publishAndSend(payload, buildInfoJson(packet_index, payload.size()));
+      publishAndSend(payload, buildInfoJson(packet_index, payload.size(), start_index));
 
       ROS_INFO_THROTTLE(1.0,
-                        "sent %s fixed points=%zu payload=%zu counter=%u packet_index=%u start_idx=%zu",
+                        "sent %s mode=%d start=%zu points=%zu bytes=%zu sim=(%.2f, %.2f, %.1fdeg, %.2fmps)",
                         trajectory_.name.c_str(),
+                        local_update_mode_,
+                        start_index,
                         chunk.size(),
                         payload.size(),
-                        static_cast<unsigned int>(counter_),
-                        packet_index,
-                        start_index);
+                        sim_x_,
+                        sim_y_,
+                        sim_heading_,
+                        sim_speed_);
+
+      if (local_update_mode_ == 1)
+      {
+        updateKinematicState(update_dt);
+      }
 
       counter_ = static_cast<uint8_t>((counter_ + 1) & 0xFF);
       ++packet_index;
-
-      // 让起点每 0.1 秒前移一个点（等于车辆前进速度）
-      if (start_index < trajectory_.points.size() - 1)
-      {
-        start_index++;
-      }
-      else
-      {
-        start_index = 0; // 跑完循环测试
-      }
-
       ros::spinOnce();
       rate.sleep();
     }
   }
 
 private:
+  void validateParams() const
+  {
+    if (point_num_ <= 0)
+    {
+      throw std::runtime_error("~point_num must be positive");
+    }
+    if (point_num_ != 80)
+    {
+      ROS_WARN("point_num=%d, expected 80 for chassis fixed trajectory array", point_num_);
+    }
+    if (rate_hz_ <= 0.0)
+    {
+      throw std::runtime_error("~rate_hz must be positive");
+    }
+    if (trajectory_length_ <= 0.0)
+    {
+      throw std::runtime_error("~trajectory_length must be positive");
+    }
+    if (udp_port_ <= 0 || udp_port_ > 65535)
+    {
+      throw std::runtime_error("~udp_port must be in 1..65535");
+    }
+    if (endian_ != "big" && endian_ != "little")
+    {
+      throw std::runtime_error("~endian must be 'big' or 'little'");
+    }
+    if (local_update_mode_ != 1 && local_update_mode_ != 2)
+    {
+      throw std::runtime_error("~local_update_mode must be 1 or 2");
+    }
+  }
+
   void openSocket()
   {
     socket_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
@@ -203,6 +206,77 @@ private:
   void publishGlobalPath()
   {
     global_path_pub_.publish(ego_trajectory_udp::makePath(trajectory_.points, frame_id_, ros::Time::now()));
+  }
+
+  std::vector<ego_trajectory_udp::TrajectoryPoint> makeLocalChunk(size_t start_index) const
+  {
+    std::vector<ego_trajectory_udp::TrajectoryPoint> chunk;
+    chunk.reserve(static_cast<size_t>(point_num_));
+    for (int i = 0; i < point_num_; ++i)
+    {
+      const size_t idx = start_index + static_cast<size_t>(i);
+      if (idx < trajectory_.points.size())
+      {
+        chunk.push_back(trajectory_.points[idx]);
+      }
+      else
+      {
+        chunk.push_back(trajectory_.points.back());
+      }
+    }
+    return chunk;
+  }
+
+  size_t nearestPathIndex(double x, double y) const
+  {
+    if (trajectory_.points.size() < 2)
+    {
+      return 0;
+    }
+
+    double best_dist2 = std::numeric_limits<double>::max();
+    size_t best_index = 0;
+    for (size_t i = 0; i + 1 < trajectory_.points.size(); ++i)
+    {
+      const auto& a = trajectory_.points[i];
+      const auto& b = trajectory_.points[i + 1];
+      const double vx = b.x - a.x;
+      const double vy = b.y - a.y;
+      const double wx = x - a.x;
+      const double wy = y - a.y;
+      const double len2 = vx * vx + vy * vy;
+      const double t = len2 <= 1e-9 ? 0.0 : std::max(0.0, std::min(1.0, (wx * vx + wy * vy) / len2));
+      const double px = a.x + t * vx;
+      const double py = a.y + t * vy;
+      const double dx = x - px;
+      const double dy = y - py;
+      const double dist2 = dx * dx + dy * dy;
+      if (dist2 < best_dist2)
+      {
+        best_dist2 = dist2;
+        best_index = t > 0.5 ? i + 1 : i;
+      }
+    }
+    return best_index;
+  }
+
+  void updateKinematicState(double update_dt)
+  {
+    const size_t idx = nearestPathIndex(sim_x_, sim_y_);
+    sim_heading_ = trajectory_.points[idx].heading_deg;
+
+    if (accel_time_ > 1e-6)
+    {
+      sim_speed_ = std::min(speed_, sim_speed_ + speed_ / accel_time_ * update_dt);
+    }
+    else
+    {
+      sim_speed_ = speed_;
+    }
+
+    const double yaw = sim_heading_ * ego_trajectory_udp::kPi / 180.0;
+    sim_x_ += sim_speed_ * std::cos(yaw) * update_dt;
+    sim_y_ += sim_speed_ * std::sin(yaw) * update_dt;
   }
 
   void pushU8(std::vector<uint8_t>& buffer, uint8_t value) const
@@ -323,16 +397,22 @@ private:
     info_pub_.publish(info_msg);
   }
 
-  std::string buildInfoJson(uint32_t packet_index, size_t payload_bytes) const
+  std::string buildInfoJson(uint32_t packet_index, size_t payload_bytes, size_t start_index) const
   {
     std::ostringstream oss;
     oss << "{"
         << "\"counter\":" << static_cast<int>(counter_) << ","
         << "\"fixed_point_num\":" << point_num_ << ","
         << "\"include_flags_in_udp\":" << (include_flags_in_udp_ ? "true" : "false") << ","
+        << "\"local_start_index\":" << start_index << ","
+        << "\"local_update_mode\":" << local_update_mode_ << ","
         << "\"packet_flag\":" << static_cast<int>(kPacketFlagSingle) << ","
         << "\"packet_index\":" << packet_index << ","
         << "\"payload_bytes\":" << payload_bytes << ","
+        << "\"sim_heading\":" << sim_heading_ << ","
+        << "\"sim_speed\":" << sim_speed_ << ","
+        << "\"sim_x\":" << sim_x_ << ","
+        << "\"sim_y\":" << sim_y_ << ","
         << "\"trajectory\":\"" << trajectory_.name << "\","
         << "\"trajectory_id\":" << static_cast<int>(trajectory_.id) << "}";
     return oss.str();
@@ -358,7 +438,9 @@ private:
   double lane_width_ = 3.5;
   double turn_radius_ = 12.0;
   double speed_ = 3.0;
+  double accel_time_ = 2.0;
   double dt_ = 0.1;
+  int local_update_mode_ = 1;
   std::string endian_ = "big";
   bool include_flags_in_udp_ = false;
   bool include_link_header_ = false;
@@ -367,6 +449,10 @@ private:
   int message_id_ = 4;
   uint8_t counter_ = 0;
   ego_trajectory_udp::Trajectory trajectory_;
+  double sim_x_ = 0.0;
+  double sim_y_ = 0.0;
+  double sim_heading_ = 0.0;
+  double sim_speed_ = 0.0;
 
   int socket_fd_ = -1;
   sockaddr_in target_addr_;

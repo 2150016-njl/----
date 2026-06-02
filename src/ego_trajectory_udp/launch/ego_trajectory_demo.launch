@@ -1,17 +1,28 @@
 <launch>
+  <arg name="trajectory" default="right_turn"/>
+  <arg name="ego_x" default="0.0"/>
+  <arg name="ego_y" default="5.0"/>
+  <arg name="ego_heading" default="-90.0"/>
+  <arg name="trajectory_length" default="100.0"/>
+  <arg name="speed" default="3.0"/>
+  <arg name="accel_time" default="2.0"/>
+  <arg name="local_update_mode" default="1"/>
+  <arg name="udp_ip" default="127.0.0.1"/>
+  <arg name="udp_port" default="5005"/>
+  <arg name="rate_hz" default="10.0"/>
+
   <node pkg="ego_trajectory_udp" type="ego_trajectory_udp_node" name="ego_trajectory_udp_node" output="screen">
-    
-    <param name="trajectory" value="right_turn"/> 
-    
-    <param name="ego_x" value="0.0"/>
-    <param name="ego_y" value="5.0"/>
-    <param name="ego_heading" value="-90.0"/>
-    
-    <param name="trajectory_length" value="100.0"/>
-    <param name="speed" value="3.0"/>
-    <param name="udp_ip" value="127.0.0.1"/>
-    <param name="udp_port" value="5005"/>
-    <param name="rate_hz" value="10.0"/>
+    <param name="trajectory" value="$(arg trajectory)"/>
+    <param name="ego_x" value="$(arg ego_x)"/>
+    <param name="ego_y" value="$(arg ego_y)"/>
+    <param name="ego_heading" value="$(arg ego_heading)"/>
+    <param name="trajectory_length" value="$(arg trajectory_length)"/>
+    <param name="speed" value="$(arg speed)"/>
+    <param name="accel_time" value="$(arg accel_time)"/>
+    <param name="local_update_mode" value="$(arg local_update_mode)"/>
+    <param name="udp_ip" value="$(arg udp_ip)"/>
+    <param name="udp_port" value="$(arg udp_port)"/>
+    <param name="rate_hz" value="$(arg rate_hz)"/>
     <param name="point_num" value="80"/>
   </node>
 
