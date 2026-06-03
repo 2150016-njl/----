@@ -372,6 +372,236 @@ inline DecodedPacket decodePayload176(const std::vector<uint8_t>& data)
   return decodePayload176(data.data(), data.size());
 }
 
+inline std::string hexValue(uint32_t value, unsigned int width)
+{
+  std::ostringstream oss;
+  oss << "0x" << std::uppercase << std::hex << std::setfill('0') << std::setw(width) << value;
+  return oss.str();
+}
+
+inline std::string hexU8(uint8_t value)
+{
+  return hexValue(static_cast<uint32_t>(value), 2);
+}
+
+inline std::string hexU16(uint16_t value)
+{
+  return hexValue(static_cast<uint32_t>(value), 4);
+}
+
+inline std::string hexU32(uint32_t value)
+{
+  return hexValue(value, 8);
+}
+
+inline std::string decimalWidth(uint32_t value, unsigned int width)
+{
+  std::ostringstream oss;
+  oss << std::setfill('0') << std::setw(width) << value;
+  return oss.str();
+}
+
+inline uint8_t byte0(uint32_t value)
+{
+  return static_cast<uint8_t>(value & 0xFFU);
+}
+
+inline uint8_t byte1(uint32_t value)
+{
+  return static_cast<uint8_t>((value >> 8) & 0xFFU);
+}
+
+inline uint8_t byte2(uint32_t value)
+{
+  return static_cast<uint8_t>((value >> 16) & 0xFFU);
+}
+
+inline uint8_t byte3(uint32_t value)
+{
+  return static_cast<uint8_t>((value >> 24) & 0xFFU);
+}
+
+inline bool bitU8(uint8_t value, unsigned int bit_index)
+{
+  return ((static_cast<uint32_t>(value) >> bit_index) & 0x1U) != 0U;
+}
+
+inline bool bitU16(uint16_t value, unsigned int bit_index)
+{
+  return ((static_cast<uint32_t>(value) >> bit_index) & 0x1U) != 0U;
+}
+
+inline unsigned int boolAsUInt(bool value)
+{
+  return value ? 1U : 0U;
+}
+
+inline const char* jsonBool(bool value)
+{
+  return value ? "true" : "false";
+}
+
+inline uint8_t fs1Temperature(uint32_t fs_message1)
+{
+  return byte0(fs_message1);
+}
+
+inline uint8_t fs1Sensor(uint32_t fs_message1)
+{
+  return byte1(fs_message1);
+}
+
+inline uint8_t fs1Battery(uint32_t fs_message1)
+{
+  return byte2(fs_message1);
+}
+
+inline uint8_t fs1Communication(uint32_t fs_message1)
+{
+  return byte3(fs_message1);
+}
+
+inline bool fs1SensorTemperatureOffline(uint32_t fs_message1)
+{
+  return bitU8(fs1Sensor(fs_message1), 0);
+}
+
+inline bool fs1SensorBrakeOffline(uint32_t fs_message1)
+{
+  return bitU8(fs1Sensor(fs_message1), 1);
+}
+
+inline bool fs1SensorAngleOffline(uint32_t fs_message1)
+{
+  return bitU8(fs1Sensor(fs_message1), 2);
+}
+
+inline bool fs1CommunicationVutOffline(uint32_t fs_message1)
+{
+  return bitU8(fs1Communication(fs_message1), 0);
+}
+
+inline bool fs1CommunicationRcOffline(uint32_t fs_message1)
+{
+  return bitU8(fs1Communication(fs_message1), 1);
+}
+
+inline bool fs1CommunicationAdsStudioOffline(uint32_t fs_message1)
+{
+  return bitU8(fs1Communication(fs_message1), 2);
+}
+
+inline uint8_t fs2TrajectoryFollowing(uint32_t fs_message2)
+{
+  return byte0(fs_message2);
+}
+
+inline uint8_t fs2Overrun(uint32_t fs_message2)
+{
+  return byte1(fs_message2);
+}
+
+inline uint8_t fs2InsState(uint32_t fs_message2)
+{
+  return byte2(fs_message2);
+}
+
+inline uint8_t fs2EmergencyStop(uint32_t fs_message2)
+{
+  return byte3(fs_message2);
+}
+
+inline bool srReadyToSwitchOn(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 0);
+}
+
+inline bool srSwitchedOn(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 1);
+}
+
+inline bool srEnabled(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 2);
+}
+
+inline bool srError(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 3);
+}
+
+inline bool srVoltageEnabled(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 4);
+}
+
+inline bool srQuickStop(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 5);
+}
+
+inline bool srSwitchOnDisabled(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 6);
+}
+
+inline bool srWarning(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 7);
+}
+
+inline bool srRunning(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 9);
+}
+
+inline bool srTargetSpeedReached(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 10);
+}
+
+inline bool srInternalLimitActive(uint16_t sr_sw)
+{
+  return bitU16(sr_sw, 11);
+}
+
+inline bool testInitialConditionReady(uint8_t test_state)
+{
+  return bitU8(test_state, 0);
+}
+
+inline bool testScenarioReady(uint8_t test_state)
+{
+  return bitU8(test_state, 1);
+}
+
+inline bool testScenarioExecution(uint8_t test_state)
+{
+  return bitU8(test_state, 2);
+}
+
+inline bool testEnd(uint8_t test_state)
+{
+  return bitU8(test_state, 3);
+}
+
+inline void appendSrStatusJson(std::ostringstream& oss, const char* prefix, uint16_t sr_sw)
+{
+  oss << "\"" << prefix << "_hex\":\"" << hexU16(sr_sw) << "\","
+      << "\"" << prefix << "_ready_to_switch_on\":" << jsonBool(srReadyToSwitchOn(sr_sw)) << ","
+      << "\"" << prefix << "_switched_on\":" << jsonBool(srSwitchedOn(sr_sw)) << ","
+      << "\"" << prefix << "_enabled\":" << jsonBool(srEnabled(sr_sw)) << ","
+      << "\"" << prefix << "_error\":" << jsonBool(srError(sr_sw)) << ","
+      << "\"" << prefix << "_voltage_enabled\":" << jsonBool(srVoltageEnabled(sr_sw)) << ","
+      << "\"" << prefix << "_quick_stop\":" << jsonBool(srQuickStop(sr_sw)) << ","
+      << "\"" << prefix << "_switch_on_disabled\":" << jsonBool(srSwitchOnDisabled(sr_sw)) << ","
+      << "\"" << prefix << "_warning\":" << jsonBool(srWarning(sr_sw)) << ","
+      << "\"" << prefix << "_running\":" << jsonBool(srRunning(sr_sw)) << ","
+      << "\"" << prefix << "_target_speed_reached\":" << jsonBool(srTargetSpeedReached(sr_sw)) << ","
+      << "\"" << prefix << "_internal_limit_active\":" << jsonBool(srInternalLimitActive(sr_sw));
+}
+
 inline std::string toJson(const DecodedPacket& p)
 {
   std::ostringstream oss;
@@ -380,11 +610,29 @@ inline std::string toJson(const DecodedPacket& p)
       << "\"latitude_deg\":" << p.latitude_deg << ","
       << "\"longitude_deg\":" << p.longitude_deg << ","
       << "\"ads_id\":" << p.ads_id << ","
+      << "\"ads_id_hex\":\"" << hexU32(p.ads_id) << "\","
+      << "\"ads_id_code\":\"" << decimalWidth(p.ads_id, 8) << "\","
       << "\"gps_time_raw_ms\":" << p.gps_time_raw_ms << ","
       << "\"gps_time_s\":" << p.gps_time_s << ","
       << "\"gps_week\":" << p.gps_week << ","
       << "\"fs_message1\":" << p.fs_message1 << ","
+      << "\"fs_message1_hex\":\"" << hexU32(p.fs_message1) << "\","
+      << "\"fs1_temperature\":" << static_cast<unsigned int>(fs1Temperature(p.fs_message1)) << ","
+      << "\"fs1_sensor\":" << static_cast<unsigned int>(fs1Sensor(p.fs_message1)) << ","
+      << "\"fs1_sensor_temperature_offline\":" << jsonBool(fs1SensorTemperatureOffline(p.fs_message1)) << ","
+      << "\"fs1_sensor_brake_offline\":" << jsonBool(fs1SensorBrakeOffline(p.fs_message1)) << ","
+      << "\"fs1_sensor_angle_offline\":" << jsonBool(fs1SensorAngleOffline(p.fs_message1)) << ","
+      << "\"fs1_battery\":" << static_cast<unsigned int>(fs1Battery(p.fs_message1)) << ","
+      << "\"fs1_communication\":" << static_cast<unsigned int>(fs1Communication(p.fs_message1)) << ","
+      << "\"fs1_comm_vut_offline\":" << jsonBool(fs1CommunicationVutOffline(p.fs_message1)) << ","
+      << "\"fs1_comm_rc_offline\":" << jsonBool(fs1CommunicationRcOffline(p.fs_message1)) << ","
+      << "\"fs1_comm_ads_studio_offline\":" << jsonBool(fs1CommunicationAdsStudioOffline(p.fs_message1)) << ","
       << "\"fs_message2\":" << p.fs_message2 << ","
+      << "\"fs_message2_hex\":\"" << hexU32(p.fs_message2) << "\","
+      << "\"fs2_traj_following\":" << static_cast<unsigned int>(fs2TrajectoryFollowing(p.fs_message2)) << ","
+      << "\"fs2_overrun\":" << static_cast<unsigned int>(fs2Overrun(p.fs_message2)) << ","
+      << "\"fs2_ins_state\":" << static_cast<unsigned int>(fs2InsState(p.fs_message2)) << ","
+      << "\"fs2_emergency_stop\":" << static_cast<unsigned int>(fs2EmergencyStop(p.fs_message2)) << ","
       << "\"bat_state1\":" << p.bat_state1 << ","
       << "\"bat_state2\":" << p.bat_state2 << ","
       << "\"bat_state3\":" << p.bat_state3 << ","
@@ -433,20 +681,40 @@ inline std::string toJson(const DecodedPacket& p)
       << "\"sr_sw1\":" << p.sr_sw1 << ","
       << "\"sr_sw2\":" << p.sr_sw2 << ","
       << "\"sr_sw3\":" << p.sr_sw3 << ","
-      << "\"sr_sw4\":" << p.sr_sw4 << ","
+      << "\"sr_sw4\":" << p.sr_sw4 << ",";
+  appendSrStatusJson(oss, "sr_sw1", p.sr_sw1);
+  oss << ",";
+  appendSrStatusJson(oss, "sr_sw2", p.sr_sw2);
+  oss << ",";
+  appendSrStatusJson(oss, "sr_sw3", p.sr_sw3);
+  oss << ",";
+  appendSrStatusJson(oss, "sr_sw4", p.sr_sw4);
+  oss << ","
       << "\"reserved\":" << p.reserved << ","
       << "\"sender\":" << static_cast<unsigned int>(p.sender) << ","
+      << "\"sender_hex\":\"" << hexU8(p.sender) << "\","
       << "\"version\":" << static_cast<unsigned int>(p.version) << ","
+      << "\"version_hex\":\"" << hexU8(p.version) << "\","
       << "\"message_id\":" << static_cast<unsigned int>(p.message_id) << ","
+      << "\"message_id_hex\":\"" << hexU8(p.message_id) << "\","
       << "\"counter\":" << static_cast<unsigned int>(p.counter) << ","
+      << "\"counter_hex\":\"" << hexU8(p.counter) << "\","
       << "\"gnss_status\":" << static_cast<unsigned int>(p.gnss_status) << ","
+      << "\"gnss_status_hex\":\"" << hexU8(p.gnss_status) << "\","
       << "\"ins_status\":" << static_cast<unsigned int>(p.ins_status) << ","
+      << "\"ins_status_hex\":\"" << hexU8(p.ins_status) << "\","
       << "\"soc1\":" << static_cast<unsigned int>(p.soc1) << ","
       << "\"soc2\":" << static_cast<unsigned int>(p.soc2) << ","
       << "\"soc3\":" << static_cast<unsigned int>(p.soc3) << ","
       << "\"soc4\":" << static_cast<unsigned int>(p.soc4) << ","
       << "\"operation_mode\":" << static_cast<unsigned int>(p.operation_mode) << ","
-      << "\"test_state\":" << static_cast<unsigned int>(p.test_state) << "}";
+      << "\"operation_mode_hex\":\"" << hexU8(p.operation_mode) << "\","
+      << "\"test_state\":" << static_cast<unsigned int>(p.test_state) << ","
+      << "\"test_state_hex\":\"" << hexU8(p.test_state) << "\","
+      << "\"test_initial_condition_ready\":" << jsonBool(testInitialConditionReady(p.test_state)) << ","
+      << "\"test_scenario_ready\":" << jsonBool(testScenarioReady(p.test_state)) << ","
+      << "\"test_scenario_execution\":" << jsonBool(testScenarioExecution(p.test_state)) << ","
+      << "\"test_end\":" << jsonBool(testEnd(p.test_state)) << "}";
   return oss.str();
 }
 

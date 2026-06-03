@@ -358,13 +358,15 @@ void printHumanHeader()
 {
   // 简洁输出，只打印最常用、最适合人工快速检查的字段。
   std::cout << "packet,src,dst,udp_payload_len,latitude_deg,longitude_deg,gps_time_s,gps_week,"
-            << "heading_deg,speed_kmh,sender,version,message_id,counter,gnss_status,ins_status,operation_mode,test_state\n";
+            << "heading_deg,speed_kmh,sender,version,version_hex,message_id,counter,gnss_status,ins_status,"
+               "operation_mode,operation_mode_hex,test_state,fs_message1_hex,fs_message2_hex\n";
 }
 
 void printHumanRow(uint64_t packet_index,
                    const UdpDatagram& udp,
                    const ego_trajectory_udp::ads_udp::DecodedPacket& p)
 {
+  using namespace ego_trajectory_udp::ads_udp;
   std::cout << std::setprecision(15)
             << packet_index << ","
             << udp.src_ip << ":" << udp.src_port << ","
@@ -378,12 +380,49 @@ void printHumanRow(uint64_t packet_index,
             << p.speed_kmh << ","
             << static_cast<unsigned int>(p.sender) << ","
             << static_cast<unsigned int>(p.version) << ","
+            << hexU8(p.version) << ","
             << static_cast<unsigned int>(p.message_id) << ","
             << static_cast<unsigned int>(p.counter) << ","
             << static_cast<unsigned int>(p.gnss_status) << ","
             << static_cast<unsigned int>(p.ins_status) << ","
             << static_cast<unsigned int>(p.operation_mode) << ","
-            << static_cast<unsigned int>(p.test_state) << "\n";
+            << hexU8(p.operation_mode) << ","
+            << static_cast<unsigned int>(p.test_state) << ","
+            << hexU32(p.fs_message1) << ","
+            << hexU32(p.fs_message2) << "\n";
+}
+
+void printSrStatusCsvHeader(const char* prefix)
+{
+  std::cout << "," << prefix << "_hex"
+            << "," << prefix << "_ready_to_switch_on"
+            << "," << prefix << "_switched_on"
+            << "," << prefix << "_enabled"
+            << "," << prefix << "_error"
+            << "," << prefix << "_voltage_enabled"
+            << "," << prefix << "_quick_stop"
+            << "," << prefix << "_switch_on_disabled"
+            << "," << prefix << "_warning"
+            << "," << prefix << "_running"
+            << "," << prefix << "_target_speed_reached"
+            << "," << prefix << "_internal_limit_active";
+}
+
+void printSrStatusCsvFields(uint16_t sr_sw)
+{
+  using namespace ego_trajectory_udp::ads_udp;
+  std::cout << "," << hexU16(sr_sw)
+            << "," << boolAsUInt(srReadyToSwitchOn(sr_sw))
+            << "," << boolAsUInt(srSwitchedOn(sr_sw))
+            << "," << boolAsUInt(srEnabled(sr_sw))
+            << "," << boolAsUInt(srError(sr_sw))
+            << "," << boolAsUInt(srVoltageEnabled(sr_sw))
+            << "," << boolAsUInt(srQuickStop(sr_sw))
+            << "," << boolAsUInt(srSwitchOnDisabled(sr_sw))
+            << "," << boolAsUInt(srWarning(sr_sw))
+            << "," << boolAsUInt(srRunning(sr_sw))
+            << "," << boolAsUInt(srTargetSpeedReached(sr_sw))
+            << "," << boolAsUInt(srInternalLimitActive(sr_sw));
 }
 
 void printCsvHeader()
@@ -398,13 +437,26 @@ void printCsvHeader()
             << "bcurr1_a,bcurr2_a,bcurr3_a,bcurr4_a,mtemp1_c,mtemp2_c,mtemp3_c,mtemp4_c,"
             << "cpu_temp_c,steering_angle_deg,steering_pwm,mov_pwm1,mov_pwm2,mov_pwm3,mov_pwm4,brake_pwm,"
             << "sr_sw1,sr_sw2,sr_sw3,sr_sw4,reserved,sender,version,message_id,counter,"
-            << "gnss_status,ins_status,soc1,soc2,soc3,soc4,operation_mode,test_state\n";
+            << "gnss_status,ins_status,soc1,soc2,soc3,soc4,operation_mode,test_state"
+            << ",ads_id_hex,ads_id_code"
+            << ",fs_message1_hex,fs1_temperature,fs1_sensor,fs1_sensor_temperature_offline,"
+               "fs1_sensor_brake_offline,fs1_sensor_angle_offline,fs1_battery,fs1_communication,"
+               "fs1_comm_vut_offline,fs1_comm_rc_offline,fs1_comm_ads_studio_offline"
+            << ",fs_message2_hex,fs2_traj_following,fs2_overrun,fs2_ins_state,fs2_emergency_stop";
+  printSrStatusCsvHeader("sr_sw1");
+  printSrStatusCsvHeader("sr_sw2");
+  printSrStatusCsvHeader("sr_sw3");
+  printSrStatusCsvHeader("sr_sw4");
+  std::cout << ",sender_hex,version_hex,message_id_hex,counter_hex,gnss_status_hex,ins_status_hex,"
+               "operation_mode_hex,test_state_hex,test_initial_condition_ready,test_scenario_ready,"
+               "test_scenario_execution,test_end\n";
 }
 
 void printCsvRow(uint64_t packet_index,
                  const UdpDatagram& udp,
                  const ego_trajectory_udp::ads_udp::DecodedPacket& p)
 {
+  using namespace ego_trajectory_udp::ads_udp;
   std::cout << std::setprecision(15)
             << packet_index << ","
             << udp.src_ip << ","
@@ -481,7 +533,42 @@ void printCsvRow(uint64_t packet_index,
             << static_cast<unsigned int>(p.soc3) << ","
             << static_cast<unsigned int>(p.soc4) << ","
             << static_cast<unsigned int>(p.operation_mode) << ","
-            << static_cast<unsigned int>(p.test_state) << "\n";
+            << static_cast<unsigned int>(p.test_state)
+            << "," << hexU32(p.ads_id)
+            << "," << decimalWidth(p.ads_id, 8)
+            << "," << hexU32(p.fs_message1)
+            << "," << static_cast<unsigned int>(fs1Temperature(p.fs_message1))
+            << "," << static_cast<unsigned int>(fs1Sensor(p.fs_message1))
+            << "," << boolAsUInt(fs1SensorTemperatureOffline(p.fs_message1))
+            << "," << boolAsUInt(fs1SensorBrakeOffline(p.fs_message1))
+            << "," << boolAsUInt(fs1SensorAngleOffline(p.fs_message1))
+            << "," << static_cast<unsigned int>(fs1Battery(p.fs_message1))
+            << "," << static_cast<unsigned int>(fs1Communication(p.fs_message1))
+            << "," << boolAsUInt(fs1CommunicationVutOffline(p.fs_message1))
+            << "," << boolAsUInt(fs1CommunicationRcOffline(p.fs_message1))
+            << "," << boolAsUInt(fs1CommunicationAdsStudioOffline(p.fs_message1))
+            << "," << hexU32(p.fs_message2)
+            << "," << static_cast<unsigned int>(fs2TrajectoryFollowing(p.fs_message2))
+            << "," << static_cast<unsigned int>(fs2Overrun(p.fs_message2))
+            << "," << static_cast<unsigned int>(fs2InsState(p.fs_message2))
+            << "," << static_cast<unsigned int>(fs2EmergencyStop(p.fs_message2));
+  printSrStatusCsvFields(p.sr_sw1);
+  printSrStatusCsvFields(p.sr_sw2);
+  printSrStatusCsvFields(p.sr_sw3);
+  printSrStatusCsvFields(p.sr_sw4);
+  std::cout << "," << hexU8(p.sender)
+            << "," << hexU8(p.version)
+            << "," << hexU8(p.message_id)
+            << "," << hexU8(p.counter)
+            << "," << hexU8(p.gnss_status)
+            << "," << hexU8(p.ins_status)
+            << "," << hexU8(p.operation_mode)
+            << "," << hexU8(p.test_state)
+            << "," << boolAsUInt(testInitialConditionReady(p.test_state))
+            << "," << boolAsUInt(testScenarioReady(p.test_state))
+            << "," << boolAsUInt(testScenarioExecution(p.test_state))
+            << "," << boolAsUInt(testEnd(p.test_state))
+            << "\n";
 }
 
 }  // 匿名命名空间
