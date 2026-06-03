@@ -1,0 +1,15 @@
+<launch>
+  <arg name="bind_ip" default="0.0.0.0"/>
+  <arg name="local_port" default="31100"/>
+  <arg name="expected_remote_ip" default=""/>
+  <arg name="expected_remote_port" default="-1"/>
+  <arg name="publish_raw_payload" default="true"/>
+
+  <node pkg="ego_trajectory_udp" type="ads_udp_decoder_node" name="ads_udp_decoder_node" output="screen">
+    <param name="bind_ip" value="$(arg bind_ip)"/>
+    <param name="local_port" value="$(arg local_port)"/>
+    <param name="expected_remote_ip" value="$(arg expected_remote_ip)"/>
+    <param name="expected_remote_port" value="$(arg expected_remote_port)"/>
+    <param name="publish_raw_payload" value="$(arg publish_raw_payload)"/>
+  </node>
+</launch>

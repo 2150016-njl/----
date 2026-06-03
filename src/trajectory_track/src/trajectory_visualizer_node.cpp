@@ -244,9 +244,9 @@ private:
     if (have_local_path_)
     {
       markers.markers.push_back(
-          pathToLineStrip(local_path_, frame_id_, stamp, "current_local_80_path", 2, color(1.0, 0.35, 0.02, 1.0), 2.6, 0.1));
+          pathToLineStrip(local_path_, frame_id_, stamp, "current_local_50_path", 2, color(1.0, 0.35, 0.02, 1.0), 2.6, 0.1));
       markers.markers.push_back(
-          pathToSphereList(local_path_, frame_id_, stamp, "current_local_80_points", 3, color(1.0, 0.85, 0.05, 1.0), 1.1, 0.15));
+          pathToSphereList(local_path_, frame_id_, stamp, "current_local_50_points", 3, color(1.0, 0.85, 0.05, 1.0), 1.1, 0.15));
     }
 
     marker_pub_.publish(markers);

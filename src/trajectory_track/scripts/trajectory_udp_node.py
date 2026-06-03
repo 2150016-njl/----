@@ -147,7 +147,7 @@ class TrajectoryUdpNode:
         self.udp_port = int(rospy.get_param("~udp_port", 31000))
         self.rate_hz = float(rospy.get_param("~rate_hz", 10.0))
         self.total_points = int(rospy.get_param("~total_points", 1000))
-        self.chunk_size = int(rospy.get_param("~chunk_size", 80))
+        self.chunk_size = int(rospy.get_param("~chunk_size", 50))
         self.point_spacing = float(rospy.get_param("~point_spacing", 0.5))
         self.dt = float(rospy.get_param("~dt", 0.1))
         self.speed = float(rospy.get_param("~speed", self.point_spacing / self.dt))
@@ -155,22 +155,22 @@ class TrajectoryUdpNode:
         self.origin_lon = float(rospy.get_param("~origin_lon", DEFAULT_ORIGIN_LON))
         self.trajectory = rospy.get_param("~trajectory", "all")
         self.loop = param_bool("~loop", False)
-        self.endian = rospy.get_param("~endian", "big").lower()
+        self.endian = rospy.get_param("~endian", "little").lower()
         self.include_link_header = param_bool("~include_link_header", False)
         self.pad_last_packet = param_bool("~pad_last_packet", False)
         self.sender = int(rospy.get_param("~sender", 10))
         self.version = int(rospy.get_param("~version", 0xF0))
-        self.message_id = int(rospy.get_param("~message_id", 4))
+        self.message_id = int(rospy.get_param("~message_id", 2))
         self.counter = 0
 
         if self.chunk_size <= 0:
             raise ValueError("~chunk_size must be positive")
         if self.total_points <= 0:
             raise ValueError("~total_points must be positive")
-        if self.endian not in ("big", "little"):
-            raise ValueError("~endian must be 'big' or 'little'")
+        if self.endian != "little":
+            raise ValueError("~endian must be 'little' (Intel byte order)")
 
-        self.byte_order = ">" if self.endian == "big" else "<"
+        self.byte_order = "<"
         self.header_struct = struct.Struct(self.byte_order + "HBBBBH")
         self.point_struct = struct.Struct(self.byte_order + "iiHhhH")
 

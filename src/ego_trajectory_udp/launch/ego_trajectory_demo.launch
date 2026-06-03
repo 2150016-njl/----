@@ -2,7 +2,7 @@
   <arg name="trajectory" default="right_turn"/>
   <arg name="ego_x" default="0.0"/>
   <arg name="ego_y" default="5.0"/>
-  <arg name="ego_heading" default="-90.0"/>
+  <arg name="ego_heading" default="180.0"/>
   <arg name="trajectory_length" default="100.0"/>
   <arg name="speed" default="3.0"/>
   <arg name="accel_time" default="2.0"/>
@@ -12,6 +12,7 @@
   <arg name="local_port" default="31100"/>
   <arg name="rate_hz" default="10.0"/>
   <arg name="endian" default="little"/>
+  <arg name="message_id" default="2"/>
 
   <node pkg="ego_trajectory_udp" type="ego_trajectory_udp_node" name="ego_trajectory_udp_node" output="screen">
     <param name="trajectory" value="$(arg trajectory)"/>
@@ -29,6 +30,7 @@
     <param name="rate_hz" value="$(arg rate_hz)"/>
     <param name="point_num" value="50"/>
     <param name="endian" value="$(arg endian)"/>
+    <param name="message_id" value="$(arg message_id)"/>
   </node>
 
   <node pkg="ego_trajectory_udp" type="ego_trajectory_visualizer_node" name="ego_trajectory_visualizer_node" output="screen"/>

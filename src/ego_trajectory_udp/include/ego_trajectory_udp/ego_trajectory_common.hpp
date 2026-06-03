@@ -46,7 +46,12 @@ inline double headingFromDelta(double dx, double dy)
   {
     return 0.0;
   }
-  return normalizeHeadingDeg(std::atan2(dy, dx) * 180.0 / kPi);
+  return normalizeHeadingDeg(std::atan2(dx, dy) * 180.0 / kPi);
+}
+
+inline double protocolHeadingToYawRad(double heading_deg)
+{
+  return (90.0 - heading_deg) * kPi / 180.0;
 }
 
 inline geometry_msgs::Quaternion yawToQuaternion(double yaw_rad)
@@ -67,7 +72,7 @@ inline void egoLocalToMap(double ego_x,
                           double& x,
                           double& y)
 {
-  const double yaw = ego_heading_deg * kPi / 180.0;
+  const double yaw = protocolHeadingToYawRad(ego_heading_deg);
   const double fx = std::cos(yaw);
   const double fy = std::sin(yaw);
   const double lx = -std::sin(yaw);
@@ -238,7 +243,7 @@ inline geometry_msgs::PoseStamped pointToPose(const TrajectoryPoint& point,
   pose.pose.position.x = point.x;
   pose.pose.position.y = point.y;
   pose.pose.position.z = 0.0;
-  const double yaw = point.heading_deg * kPi / 180.0; 
+  const double yaw = protocolHeadingToYawRad(point.heading_deg);
   pose.pose.orientation = yawToQuaternion(yaw);
   return pose;
 }

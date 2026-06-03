@@ -4,8 +4,8 @@
   <arg name="udp_port" default="31000"/>
   <arg name="rate_hz" default="10.0"/>
   <arg name="total_points" default="1000"/>
-  <arg name="chunk_size" default="80"/>
-  <arg name="publish_stride" default="80"/>
+  <arg name="chunk_size" default="50"/>
+  <arg name="publish_stride" default="50"/>
   <arg name="loop" default="false"/>
   <arg name="map_json_path" default="$(find trajectory_udp_sender)/export.json"/>
 

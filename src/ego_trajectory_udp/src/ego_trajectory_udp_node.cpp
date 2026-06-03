@@ -49,7 +49,7 @@ public:
     private_nh_.param<int>("udp_port", udp_port_, 31000);
     private_nh_.param<int>("local_port", local_port_, 31100);
     private_nh_.param<double>("rate_hz", rate_hz_, 10.0);
-    private_nh_.param<int>("point_num", point_num_, 80);
+    private_nh_.param<int>("point_num", point_num_, 50);
     private_nh_.param<double>("trajectory_length", trajectory_length_, 100.0);
     private_nh_.param<double>("ego_x", ego_x_, 0.0);
     private_nh_.param<double>("ego_y", ego_y_, 0.0);
@@ -65,7 +65,7 @@ public:
     private_nh_.param<bool>("include_link_header", include_link_header_, false);
     private_nh_.param<int>("sender", sender_, 10);
     private_nh_.param<int>("version", version_, 0xF0);
-    private_nh_.param<int>("message_id", message_id_, 4);
+    private_nh_.param<int>("message_id", message_id_, 2);
 
     validateParams();
 
@@ -163,9 +163,9 @@ private:
     {
       throw std::runtime_error("~point_num must be positive");
     }
-    if (point_num_ != 80)
+    if (point_num_ != 50)
     {
-      ROS_WARN("point_num=%d, expected 80 for chassis fixed trajectory array", point_num_);
+      ROS_WARN("point_num=%d, expected 50 for chassis fixed trajectory array", point_num_);
     }
     if (rate_hz_ <= 0.0)
     {
@@ -179,9 +179,13 @@ private:
     {
       throw std::runtime_error("~udp_port must be in 1..65535");
     }
-    if (endian_ != "big" && endian_ != "little")
+    if (ego_heading_ < 0.0 || ego_heading_ > 360.0)
     {
-      throw std::runtime_error("~endian must be 'big' or 'little'");
+      throw std::runtime_error("~ego_heading must be in 0..360 deg, where north is 0 and clockwise is positive");
+    }
+    if (endian_ != "little")
+    {
+      throw std::runtime_error("~endian must be 'little' (Intel byte order); Motorola/big is not supported");
     }
     if (local_update_mode_ != 1 && local_update_mode_ != 2)
     {
@@ -292,7 +296,7 @@ private:
       sim_speed_ = speed_;
     }
 
-    const double yaw = sim_heading_ * ego_trajectory_udp::kPi / 180.0;
+    const double yaw = ego_trajectory_udp::protocolHeadingToYawRad(sim_heading_);
     sim_x_ += sim_speed_ * std::cos(yaw) * update_dt;
     sim_y_ += sim_speed_ * std::sin(yaw) * update_dt;
   }
@@ -304,16 +308,8 @@ private:
 
   void pushU16(std::vector<uint8_t>& buffer, uint16_t value) const
   {
-    if (endian_ == "big")
-    {
-      buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
-      buffer.push_back(static_cast<uint8_t>(value & 0xFF));
-    }
-    else
-    {
-      buffer.push_back(static_cast<uint8_t>(value & 0xFF));
-      buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
-    }
+    buffer.push_back(static_cast<uint8_t>(value & 0xFF));
+    buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
   }
 
   void pushI16(std::vector<uint8_t>& buffer, int16_t value) const
@@ -323,20 +319,10 @@ private:
 
   void pushU32(std::vector<uint8_t>& buffer, uint32_t value) const
   {
-    if (endian_ == "big")
-    {
-      buffer.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
-      buffer.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
-      buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
-      buffer.push_back(static_cast<uint8_t>(value & 0xFF));
-    }
-    else
-    {
-      buffer.push_back(static_cast<uint8_t>(value & 0xFF));
-      buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
-      buffer.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
-      buffer.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
-    }
+    buffer.push_back(static_cast<uint8_t>(value & 0xFF));
+    buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
+    buffer.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
+    buffer.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
   }
 
   void pushI32(std::vector<uint8_t>& buffer, int32_t value) const
@@ -350,8 +336,7 @@ private:
                                                   std::numeric_limits<int32_t>::max())));
     pushI32(buffer, static_cast<int32_t>(quantize(point.y, 1e-3, std::numeric_limits<int32_t>::min(),
                                                   std::numeric_limits<int32_t>::max())));
-    pushU16(buffer, static_cast<uint16_t>(quantize(point.heading_deg, 0.01, 0,
-                                                   std::numeric_limits<uint16_t>::max())));
+    pushU16(buffer, static_cast<uint16_t>(quantize(point.heading_deg, 0.01, 0, 36000)));
     pushI16(buffer, static_cast<int16_t>(quantize(point.vx, 0.01, std::numeric_limits<int16_t>::min(),
                                                   std::numeric_limits<int16_t>::max())));
     pushI16(buffer, static_cast<int16_t>(quantize(point.ax, 0.01, std::numeric_limits<int16_t>::min(),
@@ -481,7 +466,7 @@ private:
   int udp_port_ = 31000;
   int local_port_ = 31100;
   double rate_hz_ = 10.0;
-  int point_num_ = 80;
+  int point_num_ = 50;
   double trajectory_length_ = 100.0;
   double ego_x_ = 0.0;
   double ego_y_ = 0.0;
@@ -492,12 +477,12 @@ private:
   double accel_time_ = 2.0;
   double dt_ = 0.1;
   int local_update_mode_ = 1;
-  std::string endian_ = "big";
+  std::string endian_ = "little";
   bool include_flags_in_udp_ = false;
   bool include_link_header_ = false;
   int sender_ = 10;
   int version_ = 0xF0;
-  int message_id_ = 4;
+  int message_id_ = 2;
   uint8_t counter_ = 0;
   ego_trajectory_udp::Trajectory trajectory_;
   double sim_x_ = 0.0;

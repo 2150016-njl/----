@@ -133,28 +133,28 @@ public:
     private_nh_.param<int>("udp_port", udp_port_, 31000);
     private_nh_.param<double>("rate_hz", rate_hz_, 10.0);
     private_nh_.param<int>("total_points", total_points_, 1000);
-    private_nh_.param<int>("chunk_size", chunk_size_, 80);        // 每次给下位机发送多少个点 (预瞄点数)
-    private_nh_.param<int>("publish_stride", publish_stride_, 80);
+    private_nh_.param<int>("chunk_size", chunk_size_, 50);        // 每次给下位机发送多少个点 (预瞄点数)
+    private_nh_.param<int>("publish_stride", publish_stride_, 50);
     private_nh_.param<double>("dt", dt_, 0.1);                    // 轨迹点之间的时间间隔
     private_nh_.param<double>("speed", speed_, 5.0);              // 车辆模拟行驶速度
     private_nh_.param<double>("origin_lat", origin_lat_, trajectory_udp_sender::kDefaultOriginLat);
     private_nh_.param<double>("origin_lon", origin_lon_, trajectory_udp_sender::kDefaultOriginLon);
     private_nh_.param<std::string>("trajectory", trajectory_name_, "straight");
     private_nh_.param<std::string>("frame_id", frame_id_, "map"); // ROS 里的世界坐标系名称
-    private_nh_.param<std::string>("endian", endian_, "big");     // 字节序（大端还是小端）
+    private_nh_.param<std::string>("endian", endian_, "little");  // 字节序：Intel/little-endian
     private_nh_.param<bool>("loop", loop_, false);                 // 跑完一圈是否循环
     private_nh_.param<bool>("include_link_header", include_link_header_, false);
     private_nh_.param<bool>("include_flags_in_udp", include_flags_in_udp_, false);
     private_nh_.param<int>("sender", sender_, 10);
     private_nh_.param<int>("version", version_, 0xF0);
-    private_nh_.param<int>("message_id", message_id_, 4);
+    private_nh_.param<int>("message_id", message_id_, 2);
     private_nh_.param<double>("lane_change_offset", lane_change_offset_, 3.5);
 
     // 参数安全性检查（防止用户在 launch 里填负数等引发系统崩溃）
     if (total_points_ <= 0) { throw std::runtime_error("~total_points must be positive"); }
     if (chunk_size_ <= 0) { throw std::runtime_error("~chunk_size must be positive"); }
     if (publish_stride_ <= 0) { throw std::runtime_error("~publish_stride must be positive"); }
-    if (endian_ != "big" && endian_ != "little") { throw std::runtime_error("~endian must be 'big' or 'little'"); }
+    if (endian_ != "little") { throw std::runtime_error("~endian must be 'little' (Intel byte order)"); }
     if (udp_port_ <= 0 || udp_port_ > 65535) { throw std::runtime_error("~udp_port must be in 1..65535"); }
 
     // 调用共通库函数，生成整条测试路（全局轨迹）的所有坐标点，存放在内存里
@@ -215,16 +215,16 @@ public:
         break; // 如果不循环且到达终点，跳出循环，程序结束
       }
 
-      // 截取：从总轨迹的 start_index 处往后截取 80 个点（组成当前要发送的局部块 chunk）
+      // 截取：从总轨迹的 start_index 处往后截取 50 个点（组成当前要发送的局部块 chunk）
       const auto chunk = makeLocalChunk(start_index); 
       const int valid_point_num = validPointCount(start_index);
       // 打标签：判断这包数据是开头还是结尾
       const uint8_t flag = packetFlag(start_index, trajectory_.points.size(), static_cast<size_t>(chunk_size_), loop_); 
-      // 打包：把这 80 个点按照协议规则，压缩、转换成要通过网线发送的纯二进制字节流
+      // 打包：把这 50 个点按照协议规则，压缩、转换成要通过网线发送的纯二进制字节流
       const auto payload = packPacket(chunk, trajectory_.id, flag, static_cast<uint16_t>(packet_index & 0xFFFF)); 
       const auto stamp = ros::Time::now(); // 获取当前的 ROS 系统时间
 
-      // 把截取出的 80 个点转成 Path 消息，发给 ROS 的 RViz 去画那条局部的线
+      // 把截取出的 50 个点转成 Path 消息，发给 ROS 的 RViz 去画那条局部的线
       local_path_pub_.publish(makePathMessage(chunk, frame_id_, stamp)); 
       
       // 调用底层网络函数把二进制包真实地通过 UDP 发送出去，同时发布供调试的 JSON
@@ -309,7 +309,7 @@ private:
     global_path_pub_.publish(makePathMessage(trajectory_.points, frame_id_, ros::Time::now()));
   }
 
-  // 从整个轨迹中，截取从 start_index 开始的一小段（比如 80 个点）
+  // 从整个轨迹中，截取从 start_index 开始的一小段（比如 50 个点）
   std::vector<TrajectoryPoint> makeLocalChunk(size_t start_index) const
   {
     std::vector<TrajectoryPoint> chunk;
@@ -334,7 +334,7 @@ private:
     return chunk;
   }
 
-  // 计算这截取的 80 个点里，有多少个是真实轨迹点（如果是末尾凑数的就不算）
+  // 计算这截取的 50 个点里，有多少个是真实轨迹点（如果是末尾凑数的就不算）
   int validPointCount(size_t start_index) const
   {
     if (loop_) { return chunk_size_; }
@@ -352,7 +352,7 @@ private:
 
   void pushU16(std::vector<uint8_t>& buffer, uint16_t value) const
   {
-    if (endian_ == "big")
+    if (false)
     {
       buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF)); // 先塞入高 8 位
       buffer.push_back(static_cast<uint8_t>(value & 0xFF));        // 再塞入低 8 位
@@ -371,7 +371,7 @@ private:
 
   void pushU32(std::vector<uint8_t>& buffer, uint32_t value) const
   {
-    if (endian_ == "big") // 32位数字有 4 个字节，依次右移后塞入
+    if (false)
     {
       buffer.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
       buffer.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
@@ -414,7 +414,7 @@ private:
     pushU16(buffer, static_cast<uint16_t>(quantize(point.time_s, 0.01, 0, std::numeric_limits<uint16_t>::max())));
   }
 
-  // 组装完整的 UDP 数据包（包含包头 + 80个数据点）
+  // 组装完整的 UDP 数据包（包含包头 + 50个数据点）
   std::vector<uint8_t> packPacket(const std::vector<TrajectoryPoint>& chunk,
                                   uint8_t trajectory_id,
                                   uint8_t flag,
@@ -448,7 +448,7 @@ private:
     }
 
     // --- 组装包体（点）部分 ---
-    // 循环遍历传入的 chunk(即那80个点)，逐个压扁后塞入
+    // 循环遍历传入的 chunk(即那50个点)，逐个压扁后塞入
     for (const auto& point : chunk)
     {
       packPoint(payload, point);
@@ -519,21 +519,21 @@ private:
   int udp_port_ = 31000;
   double rate_hz_ = 10.0;
   int total_points_ = 1000;
-  int chunk_size_ = 80;
-  int publish_stride_ = 80;
+  int chunk_size_ = 50;
+  int publish_stride_ = 50;
   double dt_ = 0.1;
   double speed_ = 5.0;
   double origin_lat_ = trajectory_udp_sender::kDefaultOriginLat;
   double origin_lon_ = trajectory_udp_sender::kDefaultOriginLon;
   std::string trajectory_name_ = "straight";
   std::string frame_id_ = "map";
-  std::string endian_ = "big";
+  std::string endian_ = "little";
   bool loop_ = true;
   bool include_link_header_ = false;
   bool include_flags_in_udp_ = false;
   int sender_ = 10;
   int version_ = 0xF0;
-  int message_id_ = 4;
+  int message_id_ = 2;
   double lane_change_offset_ = 3.5;
   uint8_t counter_ = 0;
   Trajectory trajectory_; // 内存里保存的全局大轨迹

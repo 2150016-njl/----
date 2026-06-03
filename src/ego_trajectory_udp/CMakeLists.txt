@@ -27,7 +27,17 @@ target_link_libraries(ego_trajectory_udp_node ${catkin_LIBRARIES})
 add_executable(ego_trajectory_visualizer_node src/ego_trajectory_visualizer_node.cpp)
 target_link_libraries(ego_trajectory_visualizer_node ${catkin_LIBRARIES})
 
-install(TARGETS ego_trajectory_udp_node ego_trajectory_visualizer_node
+add_executable(ads_udp_decoder_node src/ads_udp_decoder_node.cpp)
+target_link_libraries(ads_udp_decoder_node ${catkin_LIBRARIES})
+
+add_executable(ads_udp_pcap_decode src/ads_udp_pcap_decode.cpp)
+target_link_libraries(ads_udp_pcap_decode ${catkin_LIBRARIES})
+
+install(TARGETS
+  ego_trajectory_udp_node
+  ego_trajectory_visualizer_node
+  ads_udp_decoder_node
+  ads_udp_pcap_decode
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

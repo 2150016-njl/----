@@ -1,6 +1,6 @@
 # 轨迹 UDP 发布与可视化
 
-ROS1 C++ 工程：从 OSM 道路数据生成三条全局轨迹，按 80 点局部轨迹窗口定频发布 ROS 话题并打包 UDP，同时用 RViz Marker 显示地图、全局路径和当前局部路径。
+ROS1 C++ 工程：从 OSM 道路数据生成三条全局轨迹，按 50 点局部轨迹窗口定频发布 ROS 话题并打包 UDP，同时用 RViz Marker 显示地图、全局路径和当前局部路径。
 
 ## 1. 导出同济嘉定 OSM 地图
 
@@ -106,7 +106,7 @@ trajectory_udp_node
 
 ```text
 生成选中的 1000 点全局路径
-每次截取 80 个点作为局部路径
+每次截取 50 个点作为局部路径
 按 rate_hz 定频发布
 打包为 UDP payload 发送到底盘
 ```
@@ -115,7 +115,7 @@ ROS 话题：
 
 ```text
 /trajectory_global_path   nav_msgs/Path，完整全局路径
-/trajectory_local_path    nav_msgs/Path，当前 80 点局部路径
+/trajectory_local_path    nav_msgs/Path，当前 50 点局部路径
 /trajectory_udp_payload   std_msgs/UInt8MultiArray，UDP payload 字节
 /trajectory_packet_info   std_msgs/String，调试信息
 ```
@@ -142,10 +142,10 @@ Topic: /trajectory_markers
 
 ## UDP payload
 
-默认每包固定 80 点：
+默认每包固定 50 点：
 
 ```text
-8 + 16 * 80 = 1288 bytes
+8 + 16 * 50 = 808 bytes
 ```
 
 每个点字段：
@@ -160,6 +160,6 @@ Relative X, Relative Y, Heading, Vx, ax, Trajectory time
 局部 ENU 坐标
 +x：东
 +y：北
-heading：0 deg 指北，90 deg 指东
+heading：0 deg 指北，90 deg 指东，顺时针增大
 原点：31.29171, 121.20927
 ```
