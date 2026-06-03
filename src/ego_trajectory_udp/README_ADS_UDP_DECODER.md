@@ -106,7 +106,7 @@ rosrun ego_trajectory_udp ads_udp_pcap_decode udp_data.pcapng --port 31100 --lim
 Export all decoded fields:
 
 ```bash
-rosrun ego_trajectory_udp ads_udp_pcap_decode udp_data.pcapng --port 31100 --csv --limit 0 > ads_udp_decoded.csv
+rosrun ego_trajectory_udp ads_udp_pcap_decode udp_data.pcapng --port 31100 --csv --limit 0 > ads_udp_decoded_06032331.csv
 ```
 
 For the supplied `udp_data.pcapng`, the expected summary is `decoded_ads_udp_176=1380`. The first decoded packet should be close to:
