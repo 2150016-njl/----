@@ -1,7 +1,7 @@
 <launch>
   <arg name="trajectory" default="straight"/>
-  <arg name="udp_ip" default="127.0.0.1"/>
-  <arg name="udp_port" default="5005"/>
+  <arg name="udp_ip" default="192.168.88.100"/>
+  <arg name="udp_port" default="31000"/>
   <arg name="rate_hz" default="10.0"/>
   <arg name="total_points" default="1000"/>
   <arg name="chunk_size" default="80"/>

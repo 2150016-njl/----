@@ -55,8 +55,8 @@ roslaunch ego_trajectory_udp ego_trajectory_demo.launch \
   speed:=3.0 \
   accel_time:=2.0 \
   local_update_mode:=1 \
-  udp_ip:=127.0.0.1 \
-  udp_port:=5005 \
+  udp_ip:=192.168.88.100 \
+  udp_port:=31000 \
   rate_hz:=10
 ```
 

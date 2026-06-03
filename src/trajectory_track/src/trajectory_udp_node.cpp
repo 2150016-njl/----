@@ -129,8 +129,8 @@ public:
   TrajectoryUdpNode() : private_nh_("~") // private_nh_("~") 是创建一个私有句柄。在 ROS 里，带 ~ 的句柄专门用来读取 .launch 文件里属于这个节点自己的 <param> 参数
   {
     // 从 launch 文件或参数服务器中读取参数，如果没提供，就使用第三个参数作为默认值
-    private_nh_.param<std::string>("udp_ip", udp_ip_, "127.0.0.1");
-    private_nh_.param<int>("udp_port", udp_port_, 5005);
+    private_nh_.param<std::string>("udp_ip", udp_ip_, "192.168.88.100");
+    private_nh_.param<int>("udp_port", udp_port_, 31000);
     private_nh_.param<double>("rate_hz", rate_hz_, 10.0);
     private_nh_.param<int>("total_points", total_points_, 1000);
     private_nh_.param<int>("chunk_size", chunk_size_, 80);        // 每次给下位机发送多少个点 (预瞄点数)
@@ -516,7 +516,7 @@ private:
   ros::Publisher local_path_pub_;
 
   std::string udp_ip_;
-  int udp_port_ = 5005;
+  int udp_port_ = 31000;
   double rate_hz_ = 10.0;
   int total_points_ = 1000;
   int chunk_size_ = 80;

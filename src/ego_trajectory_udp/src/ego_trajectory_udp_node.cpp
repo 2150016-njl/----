@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <fstream>
 
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
@@ -44,8 +45,9 @@ public:
   {
     private_nh_.param<std::string>("trajectory", trajectory_name_, "straight");
     private_nh_.param<std::string>("frame_id", frame_id_, "map");
-    private_nh_.param<std::string>("udp_ip", udp_ip_, "127.0.0.1");
-    private_nh_.param<int>("udp_port", udp_port_, 5005);
+    private_nh_.param<std::string>("udp_ip", udp_ip_, "192.168.88.100");
+    private_nh_.param<int>("udp_port", udp_port_, 31000);
+    private_nh_.param<int>("local_port", local_port_, 31100);
     private_nh_.param<double>("rate_hz", rate_hz_, 10.0);
     private_nh_.param<int>("point_num", point_num_, 80);
     private_nh_.param<double>("trajectory_length", trajectory_length_, 100.0);
@@ -58,7 +60,7 @@ public:
     private_nh_.param<double>("accel_time", accel_time_, 2.0);
     private_nh_.param<double>("dt", dt_, 0.1);
     private_nh_.param<int>("local_update_mode", local_update_mode_, 1);
-    private_nh_.param<std::string>("endian", endian_, "big");
+    private_nh_.param<std::string>("endian", endian_, "little");
     private_nh_.param<bool>("include_flags_in_udp", include_flags_in_udp_, false);
     private_nh_.param<bool>("include_link_header", include_link_header_, false);
     private_nh_.param<int>("sender", sender_, 10);
@@ -93,6 +95,7 @@ public:
 
     openSocket();
     publishGlobalPath();
+    saveGlobalTrajectoryToCSV();
 
     ROS_INFO("ego trajectory=%s id=%u global_points=%zu local_points=%d length=%.2f speed=%.2f accel_time=%.2f mode=%d",
              trajectory_.name.c_str(),
@@ -192,6 +195,21 @@ private:
     if (socket_fd_ < 0)
     {
       throw std::runtime_error(std::string("socket() failed: ") + strerror(errno));
+    }
+
+    if (local_port_ > 0)
+    {
+      sockaddr_in local_addr;
+      std::memset(&local_addr, 0, sizeof(local_addr));
+      local_addr.sin_family = AF_INET;
+      local_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 监听本机所有 IP（包括 192.168.88.3）
+      local_addr.sin_port = htons(static_cast<uint16_t>(local_port_));
+
+      if (bind(socket_fd_, reinterpret_cast<sockaddr*>(&local_addr), sizeof(local_addr)) < 0)
+      {
+        throw std::runtime_error(std::string("bind() local port failed: ") + strerror(errno));
+      }
+      ROS_INFO("Successfully bound to local port: %d", local_port_);
     }
 
     std::memset(&target_addr_, 0, sizeof(target_addr_));
@@ -418,6 +436,38 @@ private:
     return oss.str();
   }
 
+  void saveGlobalTrajectoryToCSV() const
+  {
+    // 将文件默认保存在当前用户的根目录下，避免权限问题
+    std::string filename = "/home/" + std::string(getenv("USER")) + "/trajectory_data.csv";
+    std::ofstream file(filename);
+    
+    if (!file.is_open())
+    {
+      ROS_ERROR("Failed to create CSV file: %s", filename.c_str());
+      return;
+    }
+
+    // 1. 写入表格头部 (Header)
+    file << "time_s,x,y,heading_deg,vx,ax\n";
+
+    // 2. 遍历全局轨迹并按列写入数据
+    for (const auto& point : trajectory_.points)
+    {
+      file << point.time_s << ","
+           << point.x << ","
+           << point.y << ","
+           << point.heading_deg << ","
+           << point.vx << ","
+           << point.ax << "\n";
+    }
+
+    file.close();
+    ROS_INFO("==================================================");
+    ROS_INFO("✅ Trajectory data successfully saved to: %s", filename.c_str());
+    ROS_INFO("==================================================");
+  }
+
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
   ros::Publisher payload_pub_;
@@ -427,8 +477,9 @@ private:
 
   std::string trajectory_name_ = "straight";
   std::string frame_id_ = "map";
-  std::string udp_ip_ = "127.0.0.1";
-  int udp_port_ = 5005;
+  std::string udp_ip_ = "192.168.88.100";
+  int udp_port_ = 31000;
+  int local_port_ = 31100;
   double rate_hz_ = 10.0;
   int point_num_ = 80;
   double trajectory_length_ = 100.0;

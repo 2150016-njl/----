@@ -73,15 +73,15 @@ source devel/setup.bash
 同时启动轨迹发布节点和 RViz Marker 可视化节点，启动rosbridge server：
 
 ```bash
-roslaunch trajectory_udp_sender trajectory_demo.launch udp_ip:=127.0.0.1 trajectory:=straight
+roslaunch trajectory_udp_sender trajectory_demo.launch udp_ip:=192.168.88.100 trajectory:=straight
 roslaunch rosbridge_server rosbridge_websocket.launch
 登录webviz网站
 检查udp是否发送正常：
 python3 -c "
 import socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.bind(('127.0.0.1', 5005))
-print('📡 正在监听 127.0.0.1:5005...')
+s.bind(('192.168.88.3', 31100))
+print('📡 正在严格监听 192.168.88.3:31100...')
 while True:
     data, addr = s.recvfrom(4096)
     print(f'✅ 成功收到 {len(data)} 字节, 来源: {addr}')

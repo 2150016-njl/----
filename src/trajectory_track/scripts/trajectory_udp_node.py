@@ -143,8 +143,8 @@ def packet_flag(packet_index, total_packets):
 
 class TrajectoryUdpNode:
     def __init__(self):
-        self.udp_ip = rospy.get_param("~udp_ip", "127.0.0.1")
-        self.udp_port = int(rospy.get_param("~udp_port", 5005))
+        self.udp_ip = rospy.get_param("~udp_ip", "192.168.88.100")
+        self.udp_port = int(rospy.get_param("~udp_port", 31000))
         self.rate_hz = float(rospy.get_param("~rate_hz", 10.0))
         self.total_points = int(rospy.get_param("~total_points", 1000))
         self.chunk_size = int(rospy.get_param("~chunk_size", 80))

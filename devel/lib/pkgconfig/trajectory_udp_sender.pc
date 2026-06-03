@@ -1,8 +1,0 @@
-prefix=/home/nie/----/devel
-
-Name: trajectory_udp_sender
-Description: Description of trajectory_udp_sender
-Version: 0.1.0
-Cflags: -I/home/nie/----/src/trajectory_track/include
-Libs: -L${prefix}/lib 
-Requires: geometry_msgs nav_msgs roscpp std_msgs visualization_msgs
