@@ -6,9 +6,9 @@
 
 - Captured frame: `218` bytes
 - Ethernet + IPv4 + UDP headers: first `42` bytes
-- ADS UDP application payload: last `176` bytes
+- ADS UDP application payload: exactly `176` bytes
 
-The code decodes only the last `176` bytes. All multi-byte protocol fields use Intel/little-endian byte order. Motorola/big-endian decoding is not used.
+The code decodes only UDP application payloads whose length is exactly `176` bytes. All multi-byte protocol fields use Intel/little-endian byte order. Motorola/big-endian decoding is not used.
 
 Heading uses the protocol compass frame: north is `0 deg`, east is `90 deg`, south is `180 deg`, west is `270 deg`; values increase clockwise and should stay in `0..360 deg`.
 
@@ -106,7 +106,7 @@ rosrun ego_trajectory_udp ads_udp_pcap_decode udp_data.pcapng --port 31100 --lim
 Export all decoded fields:
 
 ```bash
-rosrun ego_trajectory_udp ads_udp_pcap_decode udp_data.pcapng --port 31100 --csv --limit 0 > ads_udp_decoded_06032331.csv
+rosrun ego_trajectory_udp ads_udp_pcap_decode udp_data.pcapng --port 31100 --csv --limit 0 > ads_udp_decoded.csv
 ```
 
 For the supplied `udp_data.pcapng`, the expected summary is `decoded_ads_udp_176=1380`. The first decoded packet should be close to:
@@ -142,7 +142,7 @@ rostopic echo -n 1 /ads_udp_decoded
 
 Successful live decode should show:
 
-- `udp_payload_bytes` is `176`, or `ads_payload_offset` explains extra leading bytes.
+- `udp_payload_bytes` is `176`; other payload lengths are rejected as non-ADS packets.
 - `decoded.version` is `240` (`0xF0`).
 - `decoded.counter` changes over time.
 - Latitude and longitude are in the expected area.
@@ -160,7 +160,7 @@ You can replay `udp_data.pcapng` for online testing, but the online node must re
 
 Two practical replay methods:
 
-- Use a UDP payload replay sender: read each pcapng UDP payload and send its last 176 bytes to `127.0.0.1:31100` or the target host IP.
+- Use a UDP payload replay sender: read each pcapng UDP payload and send the 176-byte ADS payload to `127.0.0.1:31100` or the target host IP.
 - Use `tcpreplay` from another machine or interface so the packet is delivered to the host running `ads_udp_decoder_node`. The destination IP/port in the sample is `192.168.88.3:31100`, so the receiver must match or the packets must be rewritten.
 
 To verify replay accuracy, decode the same file offline and compare with live `/ads_udp_decoded` output. The first packet values, counter sequence, GPS time, latitude, longitude, version, and message ID should match.

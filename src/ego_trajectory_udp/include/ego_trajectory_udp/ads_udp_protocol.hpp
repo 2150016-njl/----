@@ -264,21 +264,20 @@ inline DecodedPacket decodePayload176(const uint8_t* data, std::size_t size)
   // 对外的核心解码函数。
   //
   // 输入：
-  //   data/size 可以是“刚好 176 字节的 UDP payload”，也可以是“前面带了额外头部的
-  //   一段数据”。为了兼容这两种情况，本函数总是取最后 176 字节作为 ADS payload。
+  //   data/size 必须是 ADS_UDP_Protocol_V1.0 定义的 176 字节 UDP 应用层 payload。
   //
   // 输出：
   //   DecodedPacket，里面已经完成了大小端解释和 Factor 缩放。
-  if (size < kPayloadSize)
+  if (size != kPayloadSize)
   {
-    throw std::runtime_error("ADS UDP payload must contain at least 176 bytes");
+    throw std::runtime_error("ADS UDP payload must be exactly 176 bytes");
   }
 
   // Excel 表里的 offset 是抓包帧偏移，前 42 字节是 Ethernet/IP/UDP 头。
   // 在线 UDP socket 收到时，这 42 字节已经被操作系统剥掉；
   // 离线 pcapng 解码时，ads_udp_pcap_decode.cpp 也会先剥掉这些头。
-  // 因此这里统一使用“最后 176 字节”作为业务 payload 起点。
-  const uint8_t* payload = data + (size - kPayloadSize);
+  // 因此这里统一使用 data[0] 作为业务 payload 起点。
+  const uint8_t* payload = data;
   const std::size_t n = kPayloadSize;
 
   DecodedPacket packet;
@@ -372,234 +371,142 @@ inline DecodedPacket decodePayload176(const std::vector<uint8_t>& data)
   return decodePayload176(data.data(), data.size());
 }
 
-inline std::string hexValue(uint32_t value, unsigned int width)
+inline bool isValidSender(uint8_t sender)
+{
+  return sender == 1 || sender == 2 || (sender >= 100 && sender <= 120) ||
+         (sender >= 121 && sender <= 135) || (sender >= 136 && sender <= 149);
+}
+
+inline bool isValidMessageId(uint8_t message_id)
+{
+  return message_id == 1 || message_id == 2 || message_id == 3 || message_id == 4 || message_id == 11;
+}
+
+inline bool isValidOperationMode(uint8_t operation_mode)
+{
+  return operation_mode == 0x00 || operation_mode == 0x0A || operation_mode == 0x0B ||
+         operation_mode == 0x0C;
+}
+
+inline uint8_t u32Byte(uint32_t value, unsigned int byte_index)
+{
+  return static_cast<uint8_t>((value >> (byte_index * 8U)) & 0xFFU);
+}
+
+inline std::vector<std::string> validatePacket(const DecodedPacket& p)
+{
+  std::vector<std::string> errors;
+  if (p.latitude_deg < -90.0 || p.latitude_deg > 90.0)
+  {
+    errors.push_back("latitude_out_of_wgs84_range");
+  }
+  if (p.longitude_deg < -180.0 || p.longitude_deg > 180.0)
+  {
+    errors.push_back("longitude_out_of_wgs84_range");
+  }
+  if (!isValidSender(p.sender))
+  {
+    errors.push_back("sender_not_defined_by_protocol");
+  }
+  if (p.version != 0xF0)
+  {
+    errors.push_back("version_not_0xF0");
+  }
+  if (!isValidMessageId(p.message_id))
+  {
+    errors.push_back("message_id_not_defined_by_protocol");
+  }
+  if (p.heading_deg < 0.0 || p.heading_deg > 360.0)
+  {
+    errors.push_back("heading_out_of_0_360_deg");
+  }
+  if (p.gnss_status > 9)
+  {
+    errors.push_back("gnss_status_out_of_range");
+  }
+  if (p.ins_status > 3)
+  {
+    errors.push_back("ins_status_out_of_range");
+  }
+  if (p.soc1 > 100 || p.soc2 > 100 || p.soc3 > 100 || p.soc4 > 100)
+  {
+    errors.push_back("soc_out_of_0_100_percent");
+  }
+  if (u32Byte(p.fs_message1, 0) > 2)
+  {
+    errors.push_back("fs_message1_temperature_out_of_range");
+  }
+  if ((u32Byte(p.fs_message1, 1) & 0xF8U) != 0)
+  {
+    errors.push_back("fs_message1_sensor_reserved_bits_set");
+  }
+  if (u32Byte(p.fs_message1, 2) > 2)
+  {
+    errors.push_back("fs_message1_battery_out_of_range");
+  }
+  if ((u32Byte(p.fs_message1, 3) & 0xF8U) != 0)
+  {
+    errors.push_back("fs_message1_communication_reserved_bits_set");
+  }
+  if (u32Byte(p.fs_message2, 0) > 1)
+  {
+    errors.push_back("fs_message2_traj_following_out_of_range");
+  }
+  if (u32Byte(p.fs_message2, 1) > 1)
+  {
+    errors.push_back("fs_message2_overrun_out_of_range");
+  }
+  if (u32Byte(p.fs_message2, 2) > 3)
+  {
+    errors.push_back("fs_message2_ins_state_out_of_range");
+  }
+  if (u32Byte(p.fs_message2, 3) > 1)
+  {
+    errors.push_back("fs_message2_emergency_stop_out_of_range");
+  }
+  if (!isValidOperationMode(p.operation_mode))
+  {
+    errors.push_back("operation_mode_not_defined_by_protocol");
+  }
+  if (p.reserved != 0)
+  {
+    errors.push_back("reserved_field_nonzero");
+  }
+  if ((p.test_state & 0xF0) != 0)
+  {
+    errors.push_back("test_state_reserved_bits_set");
+  }
+  return errors;
+}
+
+inline std::string joinValidationErrors(const std::vector<std::string>& errors)
 {
   std::ostringstream oss;
-  oss << "0x" << std::uppercase << std::hex << std::setfill('0') << std::setw(width) << value;
+  for (std::size_t i = 0; i < errors.size(); ++i)
+  {
+    if (i != 0)
+    {
+      oss << ";";
+    }
+    oss << errors[i];
+  }
   return oss.str();
 }
 
-inline std::string hexU8(uint8_t value)
-{
-  return hexValue(static_cast<uint32_t>(value), 2);
-}
-
-inline std::string hexU16(uint16_t value)
-{
-  return hexValue(static_cast<uint32_t>(value), 4);
-}
-
-inline std::string hexU32(uint32_t value)
-{
-  return hexValue(value, 8);
-}
-
-inline std::string decimalWidth(uint32_t value, unsigned int width)
+inline std::string validationErrorsToJson(const std::vector<std::string>& errors)
 {
   std::ostringstream oss;
-  oss << std::setfill('0') << std::setw(width) << value;
+  oss << "[";
+  for (std::size_t i = 0; i < errors.size(); ++i)
+  {
+    if (i != 0)
+    {
+      oss << ",";
+    }
+    oss << "\"" << errors[i] << "\"";
+  }
+  oss << "]";
   return oss.str();
-}
-
-inline uint8_t byte0(uint32_t value)
-{
-  return static_cast<uint8_t>(value & 0xFFU);
-}
-
-inline uint8_t byte1(uint32_t value)
-{
-  return static_cast<uint8_t>((value >> 8) & 0xFFU);
-}
-
-inline uint8_t byte2(uint32_t value)
-{
-  return static_cast<uint8_t>((value >> 16) & 0xFFU);
-}
-
-inline uint8_t byte3(uint32_t value)
-{
-  return static_cast<uint8_t>((value >> 24) & 0xFFU);
-}
-
-inline bool bitU8(uint8_t value, unsigned int bit_index)
-{
-  return ((static_cast<uint32_t>(value) >> bit_index) & 0x1U) != 0U;
-}
-
-inline bool bitU16(uint16_t value, unsigned int bit_index)
-{
-  return ((static_cast<uint32_t>(value) >> bit_index) & 0x1U) != 0U;
-}
-
-inline unsigned int boolAsUInt(bool value)
-{
-  return value ? 1U : 0U;
-}
-
-inline const char* jsonBool(bool value)
-{
-  return value ? "true" : "false";
-}
-
-inline uint8_t fs1Temperature(uint32_t fs_message1)
-{
-  return byte0(fs_message1);
-}
-
-inline uint8_t fs1Sensor(uint32_t fs_message1)
-{
-  return byte1(fs_message1);
-}
-
-inline uint8_t fs1Battery(uint32_t fs_message1)
-{
-  return byte2(fs_message1);
-}
-
-inline uint8_t fs1Communication(uint32_t fs_message1)
-{
-  return byte3(fs_message1);
-}
-
-inline bool fs1SensorTemperatureOffline(uint32_t fs_message1)
-{
-  return bitU8(fs1Sensor(fs_message1), 0);
-}
-
-inline bool fs1SensorBrakeOffline(uint32_t fs_message1)
-{
-  return bitU8(fs1Sensor(fs_message1), 1);
-}
-
-inline bool fs1SensorAngleOffline(uint32_t fs_message1)
-{
-  return bitU8(fs1Sensor(fs_message1), 2);
-}
-
-inline bool fs1CommunicationVutOffline(uint32_t fs_message1)
-{
-  return bitU8(fs1Communication(fs_message1), 0);
-}
-
-inline bool fs1CommunicationRcOffline(uint32_t fs_message1)
-{
-  return bitU8(fs1Communication(fs_message1), 1);
-}
-
-inline bool fs1CommunicationAdsStudioOffline(uint32_t fs_message1)
-{
-  return bitU8(fs1Communication(fs_message1), 2);
-}
-
-inline uint8_t fs2TrajectoryFollowing(uint32_t fs_message2)
-{
-  return byte0(fs_message2);
-}
-
-inline uint8_t fs2Overrun(uint32_t fs_message2)
-{
-  return byte1(fs_message2);
-}
-
-inline uint8_t fs2InsState(uint32_t fs_message2)
-{
-  return byte2(fs_message2);
-}
-
-inline uint8_t fs2EmergencyStop(uint32_t fs_message2)
-{
-  return byte3(fs_message2);
-}
-
-inline bool srReadyToSwitchOn(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 0);
-}
-
-inline bool srSwitchedOn(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 1);
-}
-
-inline bool srEnabled(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 2);
-}
-
-inline bool srError(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 3);
-}
-
-inline bool srVoltageEnabled(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 4);
-}
-
-inline bool srQuickStop(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 5);
-}
-
-inline bool srSwitchOnDisabled(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 6);
-}
-
-inline bool srWarning(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 7);
-}
-
-inline bool srRunning(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 9);
-}
-
-inline bool srTargetSpeedReached(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 10);
-}
-
-inline bool srInternalLimitActive(uint16_t sr_sw)
-{
-  return bitU16(sr_sw, 11);
-}
-
-inline bool testInitialConditionReady(uint8_t test_state)
-{
-  return bitU8(test_state, 0);
-}
-
-inline bool testScenarioReady(uint8_t test_state)
-{
-  return bitU8(test_state, 1);
-}
-
-inline bool testScenarioExecution(uint8_t test_state)
-{
-  return bitU8(test_state, 2);
-}
-
-inline bool testEnd(uint8_t test_state)
-{
-  return bitU8(test_state, 3);
-}
-
-inline void appendSrStatusJson(std::ostringstream& oss, const char* prefix, uint16_t sr_sw)
-{
-  oss << "\"" << prefix << "_hex\":\"" << hexU16(sr_sw) << "\","
-      << "\"" << prefix << "_ready_to_switch_on\":" << jsonBool(srReadyToSwitchOn(sr_sw)) << ","
-      << "\"" << prefix << "_switched_on\":" << jsonBool(srSwitchedOn(sr_sw)) << ","
-      << "\"" << prefix << "_enabled\":" << jsonBool(srEnabled(sr_sw)) << ","
-      << "\"" << prefix << "_error\":" << jsonBool(srError(sr_sw)) << ","
-      << "\"" << prefix << "_voltage_enabled\":" << jsonBool(srVoltageEnabled(sr_sw)) << ","
-      << "\"" << prefix << "_quick_stop\":" << jsonBool(srQuickStop(sr_sw)) << ","
-      << "\"" << prefix << "_switch_on_disabled\":" << jsonBool(srSwitchOnDisabled(sr_sw)) << ","
-      << "\"" << prefix << "_warning\":" << jsonBool(srWarning(sr_sw)) << ","
-      << "\"" << prefix << "_running\":" << jsonBool(srRunning(sr_sw)) << ","
-      << "\"" << prefix << "_target_speed_reached\":" << jsonBool(srTargetSpeedReached(sr_sw)) << ","
-      << "\"" << prefix << "_internal_limit_active\":" << jsonBool(srInternalLimitActive(sr_sw));
 }
 
 inline std::string toJson(const DecodedPacket& p)
@@ -610,29 +517,11 @@ inline std::string toJson(const DecodedPacket& p)
       << "\"latitude_deg\":" << p.latitude_deg << ","
       << "\"longitude_deg\":" << p.longitude_deg << ","
       << "\"ads_id\":" << p.ads_id << ","
-      << "\"ads_id_hex\":\"" << hexU32(p.ads_id) << "\","
-      << "\"ads_id_code\":\"" << decimalWidth(p.ads_id, 8) << "\","
       << "\"gps_time_raw_ms\":" << p.gps_time_raw_ms << ","
       << "\"gps_time_s\":" << p.gps_time_s << ","
       << "\"gps_week\":" << p.gps_week << ","
       << "\"fs_message1\":" << p.fs_message1 << ","
-      << "\"fs_message1_hex\":\"" << hexU32(p.fs_message1) << "\","
-      << "\"fs1_temperature\":" << static_cast<unsigned int>(fs1Temperature(p.fs_message1)) << ","
-      << "\"fs1_sensor\":" << static_cast<unsigned int>(fs1Sensor(p.fs_message1)) << ","
-      << "\"fs1_sensor_temperature_offline\":" << jsonBool(fs1SensorTemperatureOffline(p.fs_message1)) << ","
-      << "\"fs1_sensor_brake_offline\":" << jsonBool(fs1SensorBrakeOffline(p.fs_message1)) << ","
-      << "\"fs1_sensor_angle_offline\":" << jsonBool(fs1SensorAngleOffline(p.fs_message1)) << ","
-      << "\"fs1_battery\":" << static_cast<unsigned int>(fs1Battery(p.fs_message1)) << ","
-      << "\"fs1_communication\":" << static_cast<unsigned int>(fs1Communication(p.fs_message1)) << ","
-      << "\"fs1_comm_vut_offline\":" << jsonBool(fs1CommunicationVutOffline(p.fs_message1)) << ","
-      << "\"fs1_comm_rc_offline\":" << jsonBool(fs1CommunicationRcOffline(p.fs_message1)) << ","
-      << "\"fs1_comm_ads_studio_offline\":" << jsonBool(fs1CommunicationAdsStudioOffline(p.fs_message1)) << ","
       << "\"fs_message2\":" << p.fs_message2 << ","
-      << "\"fs_message2_hex\":\"" << hexU32(p.fs_message2) << "\","
-      << "\"fs2_traj_following\":" << static_cast<unsigned int>(fs2TrajectoryFollowing(p.fs_message2)) << ","
-      << "\"fs2_overrun\":" << static_cast<unsigned int>(fs2Overrun(p.fs_message2)) << ","
-      << "\"fs2_ins_state\":" << static_cast<unsigned int>(fs2InsState(p.fs_message2)) << ","
-      << "\"fs2_emergency_stop\":" << static_cast<unsigned int>(fs2EmergencyStop(p.fs_message2)) << ","
       << "\"bat_state1\":" << p.bat_state1 << ","
       << "\"bat_state2\":" << p.bat_state2 << ","
       << "\"bat_state3\":" << p.bat_state3 << ","
@@ -681,40 +570,20 @@ inline std::string toJson(const DecodedPacket& p)
       << "\"sr_sw1\":" << p.sr_sw1 << ","
       << "\"sr_sw2\":" << p.sr_sw2 << ","
       << "\"sr_sw3\":" << p.sr_sw3 << ","
-      << "\"sr_sw4\":" << p.sr_sw4 << ",";
-  appendSrStatusJson(oss, "sr_sw1", p.sr_sw1);
-  oss << ",";
-  appendSrStatusJson(oss, "sr_sw2", p.sr_sw2);
-  oss << ",";
-  appendSrStatusJson(oss, "sr_sw3", p.sr_sw3);
-  oss << ",";
-  appendSrStatusJson(oss, "sr_sw4", p.sr_sw4);
-  oss << ","
+      << "\"sr_sw4\":" << p.sr_sw4 << ","
       << "\"reserved\":" << p.reserved << ","
       << "\"sender\":" << static_cast<unsigned int>(p.sender) << ","
-      << "\"sender_hex\":\"" << hexU8(p.sender) << "\","
       << "\"version\":" << static_cast<unsigned int>(p.version) << ","
-      << "\"version_hex\":\"" << hexU8(p.version) << "\","
       << "\"message_id\":" << static_cast<unsigned int>(p.message_id) << ","
-      << "\"message_id_hex\":\"" << hexU8(p.message_id) << "\","
       << "\"counter\":" << static_cast<unsigned int>(p.counter) << ","
-      << "\"counter_hex\":\"" << hexU8(p.counter) << "\","
       << "\"gnss_status\":" << static_cast<unsigned int>(p.gnss_status) << ","
-      << "\"gnss_status_hex\":\"" << hexU8(p.gnss_status) << "\","
       << "\"ins_status\":" << static_cast<unsigned int>(p.ins_status) << ","
-      << "\"ins_status_hex\":\"" << hexU8(p.ins_status) << "\","
       << "\"soc1\":" << static_cast<unsigned int>(p.soc1) << ","
       << "\"soc2\":" << static_cast<unsigned int>(p.soc2) << ","
       << "\"soc3\":" << static_cast<unsigned int>(p.soc3) << ","
       << "\"soc4\":" << static_cast<unsigned int>(p.soc4) << ","
       << "\"operation_mode\":" << static_cast<unsigned int>(p.operation_mode) << ","
-      << "\"operation_mode_hex\":\"" << hexU8(p.operation_mode) << "\","
-      << "\"test_state\":" << static_cast<unsigned int>(p.test_state) << ","
-      << "\"test_state_hex\":\"" << hexU8(p.test_state) << "\","
-      << "\"test_initial_condition_ready\":" << jsonBool(testInitialConditionReady(p.test_state)) << ","
-      << "\"test_scenario_ready\":" << jsonBool(testScenarioReady(p.test_state)) << ","
-      << "\"test_scenario_execution\":" << jsonBool(testScenarioExecution(p.test_state)) << ","
-      << "\"test_end\":" << jsonBool(testEnd(p.test_state)) << "}";
+      << "\"test_state\":" << static_cast<unsigned int>(p.test_state) << "}";
   return oss.str();
 }
 

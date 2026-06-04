@@ -28,7 +28,7 @@ namespace
 //   本节点绑定 UDP 端口，收到的是操作系统交给应用层的 UDP payload。
 //
 // 因此本节点不需要解析 Ethernet/IP/UDP 头，也不需要处理 pcapng 块结构。
-// 它收到一包 UDP 后，直接把最后 176 字节交给 decodePayload176()。
+// 它收到一包 UDP 后，只在 payload 正好为 176 字节时交给 decodePayload176()。
 //
 // 输出：
 //   /ads_udp_decoded  std_msgs/String，JSON 格式，包含来源 IP/端口和解码字段。
@@ -230,12 +230,15 @@ private:
   {
     // 把协议字段和 UDP 来源信息一起打进 JSON，便于检查包是否来自预期 IP/端口。
     const std::string payload_json = ego_trajectory_udp::ads_udp::toJson(decoded);
+    const std::vector<std::string> validation_errors = ego_trajectory_udp::ads_udp::validatePacket(decoded);
     std::ostringstream oss;
     oss << "{"
         << "\"remote_ip\":\"" << ipFromSockaddr(remote_addr) << "\","
         << "\"remote_port\":" << ntohs(remote_addr.sin_port) << ","
         << "\"udp_payload_bytes\":" << datagram_size << ","
-        << "\"ads_payload_offset\":" << (datagram_size - ego_trajectory_udp::ads_udp::kPayloadSize) << ","
+        << "\"ads_payload_offset\":0,"
+        << "\"protocol_valid\":" << (validation_errors.empty() ? "true" : "false") << ","
+        << "\"protocol_errors\":" << ego_trajectory_udp::ads_udp::validationErrorsToJson(validation_errors) << ","
         << "\"decoded\":" << payload_json << "}";
     return oss.str();
   }
@@ -245,18 +248,17 @@ private:
     // 处理一包 UDP 数据。
     //
     // data/size 是操作系统收到的 UDP payload，不包含 IP/UDP 头。
-    // 对标准 ADS UDP 包，size 应该正好是 176。
-    // 如果 size 大于 176，本节点仍然取最后 176 字节解码，用于兼容前面被加了自定义头的情况。
+    // 对标准 ADS UDP 包，size 必须正好是 176。
     if (!remoteMatches(remote_addr))
     {
       return;
     }
 
-    if (size < ego_trajectory_udp::ads_udp::kPayloadSize)
+    if (size != ego_trajectory_udp::ads_udp::kPayloadSize)
     {
-      // 小于 176 字节一定不完整，无法按协议读取所有字段。
+      // ADS_UDP_Protocol_V1.0 defines the application payload as exactly 176 bytes.
       ROS_WARN_THROTTLE(1.0,
-                        "drop short UDP datagram from %s:%d, got %zu bytes, need at least %zu",
+                        "drop non-ADS-length UDP datagram from %s:%d, got %zu bytes, need exactly %zu",
                         ipFromSockaddr(remote_addr).c_str(),
                         ntohs(remote_addr.sin_port),
                         size,
@@ -266,10 +268,10 @@ private:
 
     try
     {
-      // 在线 UDP 通常正好收到 176 字节。
-      // 如果发送端额外加了前缀，公共解码函数仍然只取最后 176 字节。
+      // Online UDP must be exactly the ADS 176-byte application payload.
       const ego_trajectory_udp::ads_udp::DecodedPacket decoded =
           ego_trajectory_udp::ads_udp::decodePayload176(data, size);
+      const std::vector<std::string> validation_errors = ego_trajectory_udp::ads_udp::validatePacket(decoded);
 
       std_msgs::String decoded_msg;
       // 发布 JSON 字符串，方便 rostopic echo 直接查看字段。
@@ -280,8 +282,17 @@ private:
       {
         // 发布原始 176 字节，方便需要时和 Wireshark 十六进制数据逐字节对比。
         std_msgs::UInt8MultiArray raw_msg;
-        raw_msg.data.assign(data + (size - ego_trajectory_udp::ads_udp::kPayloadSize), data + size);
+        raw_msg.data.assign(data, data + size);
         raw_pub_.publish(raw_msg);
+      }
+
+      if (!validation_errors.empty())
+      {
+        ROS_WARN_THROTTLE(1.0,
+                          "ADS UDP protocol validation failed from %s:%d: %s",
+                          ipFromSockaddr(remote_addr).c_str(),
+                          ntohs(remote_addr.sin_port),
+                          ego_trajectory_udp::ads_udp::joinValidationErrors(validation_errors).c_str());
       }
 
       ROS_INFO_THROTTLE(1.0,
