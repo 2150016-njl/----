@@ -164,3 +164,13 @@ Two practical replay methods:
 - Use `tcpreplay` from another machine or interface so the packet is delivered to the host running `ads_udp_decoder_node`. The destination IP/port in the sample is `192.168.88.3:31100`, so the receiver must match or the packets must be rewritten.
 
 To verify replay accuracy, decode the same file offline and compare with live `/ads_udp_decoded` output. The first packet values, counter sequence, GPS time, latitude, longitude, version, and message ID should match.
+
+
+
+
+# 0605 接收udp解码，提取定位（x，y，heading），构造直行/左换道/右转轨迹，发布轨迹转udp
+roslaunch ego_trajectory_udp ads_to_trajectory.launch trajectory:=straight
+roslaunch ego_trajectory_udp ads_to_trajectory.launch trajectory:=left_lane_change
+roslaunch ego_trajectory_udp ads_to_trajectory.launch trajectory:=right_turn
+## 如果现场确认要用 X_rel/Y_rel 而不是 X_rel_VUT/Y_rel_VUT
+roslaunch ego_trajectory_udp ads_to_trajectory.launch ads_pose_source:=target

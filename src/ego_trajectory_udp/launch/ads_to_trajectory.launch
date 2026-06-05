@@ -1,0 +1,53 @@
+<launch>
+  <arg name="trajectory" default="straight"/>
+  <arg name="frame_id" default="map"/>
+
+  <arg name="ads_bind_ip" default="0.0.0.0"/>
+  <arg name="ads_local_port" default="31100"/>
+  <arg name="ads_expected_remote_ip" default=""/>
+  <arg name="ads_expected_remote_port" default="-1"/>
+  <arg name="ads_pose_source" default="vut"/>
+  <arg name="ads_pose_topic" default="ads_udp_pose"/>
+  <arg name="publish_raw_payload" default="true"/>
+
+  <arg name="udp_ip" default="192.168.88.100"/>
+  <arg name="udp_port" default="31000"/>
+  <arg name="trajectory_local_port" default="0"/>
+  <arg name="rate_hz" default="10.0"/>
+  <arg name="trajectory_length" default="100.0"/>
+  <arg name="speed" default="3.0"/>
+  <arg name="accel_time" default="2.0"/>
+  <arg name="local_update_mode" default="2"/>
+
+  <node pkg="ego_trajectory_udp" type="ads_udp_decoder_node" name="ads_udp_decoder_node" output="screen">
+    <param name="bind_ip" value="$(arg ads_bind_ip)"/>
+    <param name="local_port" value="$(arg ads_local_port)"/>
+    <param name="expected_remote_ip" value="$(arg ads_expected_remote_ip)"/>
+    <param name="expected_remote_port" value="$(arg ads_expected_remote_port)"/>
+    <param name="publish_raw_payload" value="$(arg publish_raw_payload)"/>
+    <param name="publish_pose" value="true"/>
+    <param name="pose_topic" value="$(arg ads_pose_topic)"/>
+    <param name="pose_frame_id" value="$(arg frame_id)"/>
+    <param name="pose_source" value="$(arg ads_pose_source)"/>
+  </node>
+
+  <node pkg="ego_trajectory_udp" type="ego_trajectory_udp_node" name="ego_trajectory_udp_node" output="screen">
+    <param name="trajectory" value="$(arg trajectory)"/>
+    <param name="frame_id" value="$(arg frame_id)"/>
+    <param name="trajectory_length" value="$(arg trajectory_length)"/>
+    <param name="speed" value="$(arg speed)"/>
+    <param name="accel_time" value="$(arg accel_time)"/>
+    <param name="local_update_mode" value="$(arg local_update_mode)"/>
+    <param name="udp_ip" value="$(arg udp_ip)"/>
+    <param name="udp_port" value="$(arg udp_port)"/>
+    <param name="local_port" value="$(arg trajectory_local_port)"/>
+    <param name="rate_hz" value="$(arg rate_hz)"/>
+    <param name="point_num" value="50"/>
+    <param name="endian" value="little"/>
+    <param name="message_id" value="2"/>
+    <param name="use_ads_pose" value="true"/>
+    <param name="ads_pose_topic" value="$(arg ads_pose_topic)"/>
+  </node>
+
+  <node pkg="ego_trajectory_udp" type="ego_trajectory_visualizer_node" name="ego_trajectory_visualizer_node" output="screen"/>
+</launch>

@@ -11,11 +11,13 @@
 #include <string>
 #include <vector>
 
+#include <geometry_msgs/PoseStamped.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/UInt8MultiArray.h>
 
 #include "ego_trajectory_udp/ads_udp_protocol.hpp"
+#include "ego_trajectory_udp/ego_trajectory_common.hpp"
 
 namespace
 {
@@ -75,17 +77,26 @@ public:
     private_nh_.param<int>("expected_remote_port", expected_remote_port_, -1);
     private_nh_.param<bool>("publish_raw_payload", publish_raw_payload_, true);
     private_nh_.param<int>("recv_buffer_size", recv_buffer_size_, 4096);
+    private_nh_.param<bool>("publish_pose", publish_pose_, true);
+    private_nh_.param<std::string>("pose_topic", pose_topic_, "ads_udp_pose");
+    private_nh_.param<std::string>("pose_frame_id", pose_frame_id_, "map");
+    private_nh_.param<std::string>("pose_source", pose_source_, "vut");
 
     validateParams();
     openSocket();
 
     decoded_pub_ = nh_.advertise<std_msgs::String>("ads_udp_decoded", 20);
     raw_pub_ = nh_.advertise<std_msgs::UInt8MultiArray>("ads_udp_payload", 20);
+    if (publish_pose_)
+    {
+      pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(pose_topic_, 20);
+    }
 
-    ROS_INFO("ADS UDP decoder listening on %s:%d, payload=last %zu bytes, endian=Intel/little",
+    ROS_INFO("ADS UDP decoder listening on %s:%d, payload=last %zu bytes, endian=Intel/little, pose_source=%s",
              bind_ip_.c_str(),
              local_port_,
-             ego_trajectory_udp::ads_udp::kPayloadSize);
+             ego_trajectory_udp::ads_udp::kPayloadSize,
+             pose_source_.c_str());
   }
 
   ~AdsUdpDecoderNode()
@@ -172,6 +183,10 @@ private:
     {
       throw std::runtime_error("~recv_buffer_size must be at least 176");
     }
+    if (pose_source_ != "vut" && pose_source_ != "target")
+    {
+      throw std::runtime_error("~pose_source must be 'vut' or 'target'");
+    }
   }
 
   void openSocket()
@@ -243,6 +258,41 @@ private:
     return oss.str();
   }
 
+  void decodedPoseXy(const ego_trajectory_udp::ads_udp::DecodedPacket& decoded, double& x_m, double& y_m) const
+  {
+    if (pose_source_ == "target")
+    {
+      x_m = decoded.x_rel_m;
+      y_m = decoded.y_rel_m;
+      return;
+    }
+
+    x_m = decoded.x_rel_vut_m;
+    y_m = decoded.y_rel_vut_m;
+  }
+
+  void publishPose(const ego_trajectory_udp::ads_udp::DecodedPacket& decoded)
+  {
+    if (!publish_pose_)
+    {
+      return;
+    }
+
+    double x_m = 0.0;
+    double y_m = 0.0;
+    decodedPoseXy(decoded, x_m, y_m);
+
+    geometry_msgs::PoseStamped pose;
+    pose.header.stamp = ros::Time::now();
+    pose.header.frame_id = pose_frame_id_;
+    pose.pose.position.x = x_m;
+    pose.pose.position.y = y_m;
+    pose.pose.position.z = 0.0;
+    pose.pose.orientation =
+        ego_trajectory_udp::yawToQuaternion(ego_trajectory_udp::protocolHeadingToYawRad(decoded.heading_deg));
+    pose_pub_.publish(pose);
+  }
+
   void handleDatagram(const uint8_t* data, std::size_t size, const sockaddr_in& remote_addr)
   {
     // 处理一包 UDP 数据。
@@ -277,6 +327,7 @@ private:
       // 发布 JSON 字符串，方便 rostopic echo 直接查看字段。
       decoded_msg.data = addTransportToJson(decoded, remote_addr, size);
       decoded_pub_.publish(decoded_msg);
+      publishPose(decoded);
 
       if (publish_raw_payload_)
       {
@@ -317,6 +368,7 @@ private:
   ros::NodeHandle private_nh_;
   ros::Publisher decoded_pub_;
   ros::Publisher raw_pub_;
+  ros::Publisher pose_pub_;
 
   std::string bind_ip_ = "0.0.0.0";
   int local_port_ = 31100;
@@ -324,6 +376,10 @@ private:
   int expected_remote_port_ = -1;
   bool publish_raw_payload_ = true;
   int recv_buffer_size_ = 4096;
+  bool publish_pose_ = true;
+  std::string pose_topic_ = "ads_udp_pose";
+  std::string pose_frame_id_ = "map";
+  std::string pose_source_ = "vut";
   int socket_fd_ = -1;
 };
 

@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fstream>
 
+#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
@@ -36,6 +37,18 @@ int64_t quantize(double value, double factor, int64_t low, int64_t high)
   const int64_t raw = static_cast<int64_t>(std::llround(value / factor));
   return clampValue<int64_t>(raw, low, high);
 }
+
+double yawRadFromQuaternion(const geometry_msgs::Quaternion& q)
+{
+  const double siny_cosp = 2.0 * (q.w * q.z + q.x * q.y);
+  const double cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);
+  return std::atan2(siny_cosp, cosy_cosp);
+}
+
+double protocolHeadingFromQuaternion(const geometry_msgs::Quaternion& q)
+{
+  return ego_trajectory_udp::normalizeHeadingDeg(90.0 - yawRadFromQuaternion(q) * 180.0 / ego_trajectory_udp::kPi);
+}
 }  // namespace
 
 class EgoTrajectoryUdpNode
@@ -66,16 +79,17 @@ public:
     private_nh_.param<int>("sender", sender_, 10);
     private_nh_.param<int>("version", version_, 0xF0);
     private_nh_.param<int>("message_id", message_id_, 2);
+    private_nh_.param<bool>("use_ads_pose", use_ads_pose_, true);
+    private_nh_.param<std::string>("ads_pose_topic", ads_pose_topic_, "ads_udp_pose");
+    private_nh_.param<double>("ads_pose_timeout", ads_pose_timeout_s_, 1.0);
 
     validateParams();
 
-    const int global_point_num =
-        std::max(point_num_, static_cast<int>(std::ceil(trajectory_length_ / std::max(speed_ * dt_, 0.01))) + 1);
     trajectory_ = ego_trajectory_udp::makeTrajectory(trajectory_name_,
                                                      ego_x_,
                                                      ego_y_,
                                                      ego_heading_,
-                                                     global_point_num,
+                                                     globalPointNum(),
                                                      trajectory_length_,
                                                      lane_width_,
                                                      turn_radius_,
@@ -92,12 +106,23 @@ public:
     info_pub_ = nh_.advertise<std_msgs::String>("trajectory_packet_info", 10);
     global_path_pub_ = nh_.advertise<nav_msgs::Path>("trajectory_global_path", 1, true);
     local_path_pub_ = nh_.advertise<nav_msgs::Path>("trajectory_local_path", 10);
+    if (use_ads_pose_)
+    {
+      ads_pose_sub_ = nh_.subscribe(ads_pose_topic_, 20, &EgoTrajectoryUdpNode::adsPoseCallback, this);
+    }
 
     openSocket();
-    publishGlobalPath();
-    saveGlobalTrajectoryToCSV();
+    if (use_ads_pose_)
+    {
+      ROS_INFO("waiting for first %s to initialize fixed global trajectory", ads_pose_topic_.c_str());
+    }
+    else
+    {
+      publishGlobalPath();
+      saveGlobalTrajectoryToCSV();
+    }
 
-    ROS_INFO("ego trajectory=%s id=%u global_points=%zu local_points=%d length=%.2f speed=%.2f accel_time=%.2f mode=%d",
+    ROS_INFO("ego trajectory=%s id=%u global_points=%zu local_points=%d length=%.2f speed=%.2f accel_time=%.2f mode=%d use_ads_pose=%s",
              trajectory_.name.c_str(),
              static_cast<unsigned int>(trajectory_.id),
              trajectory_.points.size(),
@@ -105,7 +130,8 @@ public:
              trajectory_length_,
              speed_,
              accel_time_,
-             local_update_mode_);
+             local_update_mode_,
+             use_ads_pose_ ? "true" : "false");
   }
 
   ~EgoTrajectoryUdpNode()
@@ -124,34 +150,43 @@ public:
 
     while (ros::ok())
     {
-      const size_t start_index = local_update_mode_ == 1 ? nearestPathIndex(sim_x_, sim_y_) : 0;
+      ros::spinOnce();
+
+      const bool using_ads_pose = updatePoseFromAdsIfAvailable(ros::Time::now());
+      if (use_ads_pose_ && !using_ads_pose)
+      {
+        rate.sleep();
+        continue;
+      }
+
+      const size_t start_index =
+          (using_ads_pose || local_update_mode_ == 1) ? nearestPathIndex(sim_x_, sim_y_) : 0;
       const auto chunk = makeLocalChunk(start_index);
       const ros::Time stamp = ros::Time::now();
       const auto payload = packPacket(chunk, static_cast<uint16_t>(packet_index & 0xFFFF));
 
       local_path_pub_.publish(ego_trajectory_udp::makePath(chunk, frame_id_, stamp));
-      publishAndSend(payload, buildInfoJson(packet_index, payload.size(), start_index));
+      publishAndSend(payload, buildInfoJson(packet_index, payload.size(), start_index, using_ads_pose));
 
       ROS_INFO_THROTTLE(1.0,
-                        "sent %s mode=%d start=%zu points=%zu bytes=%zu sim=(%.2f, %.2f, %.1fdeg, %.2fmps)",
+                        "sent %s mode=%d start=%zu points=%zu bytes=%zu pose_source=%s pose=(%.2f, %.2f, %.1fdeg)",
                         trajectory_.name.c_str(),
                         local_update_mode_,
                         start_index,
                         chunk.size(),
                         payload.size(),
+                        using_ads_pose ? "ads_udp_pose" : "fallback",
                         sim_x_,
                         sim_y_,
-                        sim_heading_,
-                        sim_speed_);
+                        sim_heading_);
 
-      if (local_update_mode_ == 1)
+      if (!using_ads_pose && local_update_mode_ == 1)
       {
         updateKinematicState(update_dt);
       }
 
       counter_ = static_cast<uint8_t>((counter_ + 1) & 0xFF);
       ++packet_index;
-      ros::spinOnce();
       rate.sleep();
     }
   }
@@ -179,6 +214,10 @@ private:
     {
       throw std::runtime_error("~udp_port must be in 1..65535");
     }
+    if (local_port_ < 0 || local_port_ > 65535)
+    {
+      throw std::runtime_error("~local_port must be 0 or in 1..65535");
+    }
     if (ego_heading_ < 0.0 || ego_heading_ > 360.0)
     {
       throw std::runtime_error("~ego_heading must be in 0..360 deg, where north is 0 and clockwise is positive");
@@ -191,6 +230,75 @@ private:
     {
       throw std::runtime_error("~local_update_mode must be 1 or 2");
     }
+    if (message_id_ != 2)
+    {
+      throw std::runtime_error("~message_id must be 2");
+    }
+  }
+
+  int globalPointNum() const
+  {
+    return std::max(point_num_, static_cast<int>(std::ceil(trajectory_length_ / std::max(speed_ * dt_, 0.01))) + 1);
+  }
+
+  void adsPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+  {
+    latest_ads_x_ = msg->pose.position.x;
+    latest_ads_y_ = msg->pose.position.y;
+    latest_ads_heading_ = protocolHeadingFromQuaternion(msg->pose.orientation);
+    latest_ads_stamp_ = msg->header.stamp.isZero() ? ros::Time::now() : msg->header.stamp;
+    have_ads_pose_ = true;
+  }
+
+  bool updatePoseFromAdsIfAvailable(const ros::Time& now)
+  {
+    if (!use_ads_pose_)
+    {
+      return false;
+    }
+
+    if (!have_ads_pose_)
+    {
+      ROS_WARN_THROTTLE(1.0, "waiting for first ads_udp_pose, trajectory UDP is not sent yet");
+      return false;
+    }
+
+    if (ads_pose_timeout_s_ > 0.0 && (now - latest_ads_stamp_).toSec() > ads_pose_timeout_s_)
+    {
+      ROS_WARN_THROTTLE(1.0,
+                        "latest ads_udp_pose is stale: age=%.3fs timeout=%.3fs, trajectory UDP is not sent",
+                        (now - latest_ads_stamp_).toSec(),
+                        ads_pose_timeout_s_);
+      return false;
+    }
+
+    sim_x_ = latest_ads_x_;
+    sim_y_ = latest_ads_y_;
+    sim_heading_ = ego_trajectory_udp::normalizeHeadingDeg(latest_ads_heading_);
+    sim_speed_ = speed_;
+
+    if (!ads_global_initialized_)
+    {
+      trajectory_ = ego_trajectory_udp::makeTrajectory(trajectory_name_,
+                                                       sim_x_,
+                                                       sim_y_,
+                                                       sim_heading_,
+                                                       globalPointNum(),
+                                                       trajectory_length_,
+                                                       lane_width_,
+                                                       turn_radius_,
+                                                       speed_,
+                                                       dt_,
+                                                       accel_time_);
+      ads_global_initialized_ = true;
+      publishGlobalPath();
+      saveGlobalTrajectoryToCSV();
+      ROS_INFO("initialized fixed global trajectory from first ads_udp_pose: x=%.3f y=%.3f heading=%.2fdeg",
+               sim_x_,
+               sim_y_,
+               sim_heading_);
+    }
+    return true;
   }
 
   void openSocket()
@@ -400,7 +508,10 @@ private:
     info_pub_.publish(info_msg);
   }
 
-  std::string buildInfoJson(uint32_t packet_index, size_t payload_bytes, size_t start_index) const
+  std::string buildInfoJson(uint32_t packet_index,
+                            size_t payload_bytes,
+                            size_t start_index,
+                            bool using_ads_pose) const
   {
     std::ostringstream oss;
     oss << "{"
@@ -412,6 +523,7 @@ private:
         << "\"packet_flag\":" << static_cast<int>(kPacketFlagSingle) << ","
         << "\"packet_index\":" << packet_index << ","
         << "\"payload_bytes\":" << payload_bytes << ","
+        << "\"pose_source\":\"" << (using_ads_pose ? "ads_udp_pose" : "fallback") << "\","
         << "\"sim_heading\":" << sim_heading_ << ","
         << "\"sim_speed\":" << sim_speed_ << ","
         << "\"sim_x\":" << sim_x_ << ","
@@ -459,6 +571,7 @@ private:
   ros::Publisher info_pub_;
   ros::Publisher global_path_pub_;
   ros::Publisher local_path_pub_;
+  ros::Subscriber ads_pose_sub_;
 
   std::string trajectory_name_ = "straight";
   std::string frame_id_ = "map";
@@ -483,12 +596,21 @@ private:
   int sender_ = 10;
   int version_ = 0xF0;
   int message_id_ = 2;
+  bool use_ads_pose_ = true;
+  std::string ads_pose_topic_ = "ads_udp_pose";
+  double ads_pose_timeout_s_ = 1.0;
   uint8_t counter_ = 0;
   ego_trajectory_udp::Trajectory trajectory_;
   double sim_x_ = 0.0;
   double sim_y_ = 0.0;
   double sim_heading_ = 0.0;
   double sim_speed_ = 0.0;
+  bool have_ads_pose_ = false;
+  double latest_ads_x_ = 0.0;
+  double latest_ads_y_ = 0.0;
+  double latest_ads_heading_ = 0.0;
+  ros::Time latest_ads_stamp_;
+  bool ads_global_initialized_ = false;
 
   int socket_fd_ = -1;
   sockaddr_in target_addr_;
