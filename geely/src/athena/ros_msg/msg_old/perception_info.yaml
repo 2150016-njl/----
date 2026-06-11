@@ -1,0 +1,488 @@
+timestamp: #时间戳，点云时间
+  data: 1600582754.0
+device_id: #设备id
+  data: 1
+has_lidarframe: 
+  data: True
+lidarframe: 
+  has_objects: 
+    data: True
+  objects: 
+    timestamp: 
+      data: 0.0
+    device_id: 
+      data: 0
+    objects: 
+      - 
+        coreInfo: 
+          timestamp: 
+            data: 1600582784.0
+          frame_id:  
+            data: ''
+          priority_id: 
+            data: -1.0
+          existence_confidence:  
+            data: 0.999996304512
+          center: 
+            x: 
+              data: -7.28550958633
+            y: 
+              data: 23.8904819489
+            z: 
+              data: 0.18525223434
+          center_cov: 
+            matrix3x3: 
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+          size: # 长宽高
+            x: 
+              data: 0.473152160645
+            y: 
+              data: 0.427501678467
+            z: 
+              data: 1.71835434437
+          size_cov: # 协方差
+            matrix3x3: 
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+          direction: # 方向，单位向量
+            x: 
+              data: -0.0960539579391
+            y: 
+              data: -0.995376229286
+            z: 
+              data: 0.0
+          direction_cov: # 协方差
+            matrix3x3: 
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+          type: # 类型，这里对应的类型没解释
+            data: 1
+          type_confidence: 
+            data: 0.999996900558
+          attention_type: 
+            data: 0
+          motion_state: 
+            data: 0
+          trakcer_id: 
+            data: 0
+          age: 
+            data: 0.0
+          velocity: 
+            x: 
+              data: 0.0
+            y: 
+              data: 0.0
+            z: 
+              data: 0.0
+          velocity_cov: 
+            matrix3x3: 
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+          acceleration: 
+            x: 
+              data: 0.0
+            y: 
+              data: 0.0
+            z: 
+              data: 0.0
+          acceleration_cov: 
+            matrix3x3: 
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+          angle_velocity: 
+            x: 
+              data: 0.0
+            y: 
+              data: 0.0
+            z: 
+              data: 0.0
+          anchor: 
+            x: 
+              data: -7.2627286911
+            y: 
+              data: 23.913980484
+            z: 
+              data: 0.2618509233
+          nearest_point: 
+            x: 
+              data: -7.32044029236
+            y: 
+              data: 23.6733207703
+            z: 
+              data: 0.0
+          left_point: 
+            x: 
+              data: -7.05794143677
+            y: 
+              data: 24.0830879211
+            z: 
+              data: 0.0
+          right_point: 
+            x: 
+              data: -7.49871730804
+            y: 
+              data: 23.9064102173
+            z: 
+              data: 0.0
+        hasSupplmentInfo: 
+          data: True
+        supplementInfo: 
+          polygon: 
+            - 
+              x: 
+                data: -7.05794143677
+              y: 
+                data: 24.0830879211
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.14326000214
+              y: 
+                data: 24.1144351959
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.36157417297
+              y: 
+                data: 24.1233272552
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.49103069305
+              y: 
+                data: 23.9330501556
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.49871730804
+              y: 
+                data: 23.9064102173
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.43233203888
+              y: 
+                data: 23.7166481018
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.41094875336
+              y: 
+                data: 23.6649112701
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.32044029236
+              y: 
+                data: 23.6733207703
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.247153759
+              y: 
+                data: 23.705537796
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.07663154602
+              y: 
+                data: 23.8296928406
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.06073617935
+              y: 
+                data: 23.9944038391
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.05523252487
+              y: 
+                data: 24.0602283478
+              z: 
+                data: 0.0
+          reference: 
+            - 
+              x: 
+                data: -7.49871730804
+              y: 
+                data: 23.9064102173
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.43233203888
+              y: 
+                data: 23.7166481018
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.41094875336
+              y: 
+                data: 23.6649112701
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.32044029236
+              y: 
+                data: 23.6733207703
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.247153759
+              y: 
+                data: 23.705537796
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.07663154602
+              y: 
+                data: 23.8296928406
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.06073617935
+              y: 
+                data: 23.9944038391
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.05523252487
+              y: 
+                data: 24.0602283478
+              z: 
+                data: 0.0
+            - 
+              x: 
+                data: -7.05794143677
+              y: 
+                data: 24.0830879211
+              z: 
+                data: 0.0
+          cloud_indices: []
+          attention_indices: []
+          latent_types: 
+            - 
+              data: 4.36680913651e-09
+            - 
+              data: 0.999996900558
+            - 
+              data: 9.1060687879e-09
+            - 
+              data: 3.02470061797e-06
+            - 
+              data: 8.56598845189e-08
+            - 
+              data: 0.0
+          size_type: 
+            data: 0
+          mode: 
+            data: 2
+          in_roi: 
+            data: True
+          angle_velocity_cov: 
+            matrix3x3: 
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+          angle_acceleration: 
+            x: 
+              data: 0.0
+            y: 
+              data: 0.0
+            z: 
+              data: 0.0
+          angle_acceleration_cov: 
+            matrix3x3: 
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 0.0
+              - 
+                data: 1.0
+          trajectory: []
+          history_velocity: []
+          history_type: []
+          gps_info: 
+            x: 
+              data: 109.568891399
+            y: 
+              data: 24.4019475813
+            z: 
+              data: 24.5870332566
+  has_attention_objects: 
+    data: True
+  attention_objects: 
+    timestamp: 
+      data: 0.0
+    device_id: 
+      data: 0
+    objects: []
+  has_freespace: 
+    data: True
+  freespace_infos: 
+    freespace_infos: []
+  has_lanes: 
+    data: False
+  lanes: 
+    lanes: []
+  has_curbs: 
+    data: False
+  curbs: 
+    curbs: []
+  has_non_ground_indices: 
+    data: False
+  non_ground_indices: 
+    indices: []
+  has_ground_indices: 
+    data: False
+  ground_indices: 
+    indices: []
+  has_background_indices: 
+    data: False
+  background_indices: 
+    indices: []
+has_pointcloud: 
+  data: False
+scan_pointcloud: []
+has_pose: 
+  data: False
+global_pose: 
+  x: 
+    data: 0.0
+  y: 
+    data: 0.0
+  z: 
+    data: 0.0
+  roll: 
+    data: 0.0
+  pitch: 
+    data: 0.0
+  yaw: 
+    data: 0.0
+---

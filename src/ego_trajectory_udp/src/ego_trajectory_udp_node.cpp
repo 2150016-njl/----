@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <fstream>
 
-#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
@@ -49,6 +49,12 @@ double protocolHeadingFromQuaternion(const geometry_msgs::Quaternion& q)
 {
   return ego_trajectory_udp::normalizeHeadingDeg(90.0 - yawRadFromQuaternion(q) * 180.0 / ego_trajectory_udp::kPi);
 }
+
+struct PathProjection
+{
+  size_t index = 0;
+  double s_m = 0.0;
+};
 }  // namespace
 
 class EgoTrajectoryUdpNode
@@ -79,59 +85,60 @@ public:
     private_nh_.param<int>("sender", sender_, 10);
     private_nh_.param<int>("version", version_, 0xF0);
     private_nh_.param<int>("message_id", message_id_, 2);
-    private_nh_.param<bool>("use_ads_pose", use_ads_pose_, true);
-    private_nh_.param<std::string>("ads_pose_topic", ads_pose_topic_, "ads_udp_pose");
-    private_nh_.param<double>("ads_pose_timeout", ads_pose_timeout_s_, 1.0);
+    private_nh_.param<bool>("use_ads_state", use_ads_state_, true);
+    private_nh_.param<std::string>("ads_state_topic", ads_state_topic_, "ads_udp_state");
+    private_nh_.param<double>("ads_state_timeout", ads_state_timeout_s_, 1.0);
 
     validateParams();
 
-    trajectory_ = ego_trajectory_udp::makeTrajectory(trajectory_name_,
-                                                     ego_x_,
-                                                     ego_y_,
-                                                     ego_heading_,
-                                                     globalPointNum(),
-                                                     trajectory_length_,
-                                                     lane_width_,
-                                                     turn_radius_,
-                                                     speed_,
-                                                     dt_,
-                                                     accel_time_);
-
+    // 初始化内部状态
     sim_x_ = ego_x_;
     sim_y_ = ego_y_;
     sim_heading_ = ego_heading_;
     sim_speed_ = 0.0;
+    // 如果 use_ads_state=true，这些只是初值，真正运行时会被 /ads_udp_state 覆盖
 
     payload_pub_ = nh_.advertise<std_msgs::UInt8MultiArray>("trajectory_udp_payload", 10);
     info_pub_ = nh_.advertise<std_msgs::String>("trajectory_packet_info", 10);
     global_path_pub_ = nh_.advertise<nav_msgs::Path>("trajectory_global_path", 1, true);
     local_path_pub_ = nh_.advertise<nav_msgs::Path>("trajectory_local_path", 10);
-    if (use_ads_pose_)
+    if (use_ads_state_)
     {
-      ads_pose_sub_ = nh_.subscribe(ads_pose_topic_, 20, &EgoTrajectoryUdpNode::adsPoseCallback, this);
+      ads_state_sub_ = nh_.subscribe(ads_state_topic_, 20, &EgoTrajectoryUdpNode::adsStateCallback, this);
     }
 
     openSocket();
-    if (use_ads_pose_)
+    if (use_ads_state_)
     {
-      ROS_INFO("waiting for first %s to initialize fixed global trajectory", ads_pose_topic_.c_str());
+      ROS_INFO("waiting for first %s to initialize fixed global trajectory", ads_state_topic_.c_str());
     }
     else
     {
+      trajectory_ = ego_trajectory_udp::makeTrajectory(trajectory_name_,
+                                                       ego_x_,
+                                                       ego_y_,
+                                                       ego_heading_,
+                                                       globalPointNum(),
+                                                       trajectory_length_,
+                                                       lane_width_,
+                                                       turn_radius_,
+                                                       speed_,
+                                                       dt_,
+                                                       0.0);
+      rebuildGlobalArcLengths();
       publishGlobalPath();
       saveGlobalTrajectoryToCSV();
     }
 
-    ROS_INFO("ego trajectory=%s id=%u global_points=%zu local_points=%d length=%.2f speed=%.2f accel_time=%.2f mode=%d use_ads_pose=%s",
-             trajectory_.name.c_str(),
-             static_cast<unsigned int>(trajectory_.id),
+    ROS_INFO("ego trajectory=%s global_points=%zu local_points=%d length=%.2f target_speed=%.2f accel_time=%.2f mode=%d use_ads_state=%s",
+             trajectory_name_.c_str(),
              trajectory_.points.size(),
              point_num_,
              trajectory_length_,
              speed_,
              accel_time_,
              local_update_mode_,
-             use_ads_pose_ ? "true" : "false");
+             use_ads_state_ ? "true" : "false");
   }
 
   ~EgoTrajectoryUdpNode()
@@ -152,35 +159,46 @@ public:
     {
       ros::spinOnce();
 
-      const bool using_ads_pose = updatePoseFromAdsIfAvailable(ros::Time::now());
-      if (use_ads_pose_ && !using_ads_pose)
+      const bool using_ads_state = updateStateFromAdsIfAvailable(ros::Time::now());
+      if (use_ads_state_ && !using_ads_state)
       {
         rate.sleep();
         continue;
       }
 
-      const size_t start_index =
-          (using_ads_pose || local_update_mode_ == 1) ? nearestPathIndex(sim_x_, sim_y_) : 0;
-      const auto chunk = makeLocalChunk(start_index);
+      size_t start_index = 0;
+      std::vector<ego_trajectory_udp::TrajectoryPoint> chunk;
+      if (using_ads_state)
+      {
+        const PathProjection projection = nearestPathProjection(sim_x_, sim_y_);
+        start_index = projection.index;
+        chunk = makeTimedLocalChunk(projection.s_m, sim_speed_);
+      }
+      else
+      {
+        start_index = local_update_mode_ == 1 ? nearestPathIndex(sim_x_, sim_y_) : 0;
+        chunk = makeLocalChunk(start_index);
+      }
       const ros::Time stamp = ros::Time::now();
       const auto payload = packPacket(chunk, static_cast<uint16_t>(packet_index & 0xFFFF));
 
       local_path_pub_.publish(ego_trajectory_udp::makePath(chunk, frame_id_, stamp));
-      publishAndSend(payload, buildInfoJson(packet_index, payload.size(), start_index, using_ads_pose));
+      publishAndSend(payload, buildInfoJson(packet_index, payload.size(), start_index, using_ads_state));
 
       ROS_INFO_THROTTLE(1.0,
-                        "sent %s mode=%d start=%zu points=%zu bytes=%zu pose_source=%s pose=(%.2f, %.2f, %.1fdeg)",
+                        "sent %s mode=%d start=%zu points=%zu bytes=%zu state_source=%s state=(%.2f, %.2f, %.1fdeg, %.2fmps)",
                         trajectory_.name.c_str(),
                         local_update_mode_,
                         start_index,
                         chunk.size(),
                         payload.size(),
-                        using_ads_pose ? "ads_udp_pose" : "fallback",
+                        using_ads_state ? "ads_udp_state" : "fallback",
                         sim_x_,
                         sim_y_,
-                        sim_heading_);
+                        sim_heading_,
+                        sim_speed_);
 
-      if (!using_ads_pose && local_update_mode_ == 1)
+      if (!using_ads_state && local_update_mode_ == 1)
       {
         updateKinematicState(update_dt);
       }
@@ -241,41 +259,42 @@ private:
     return std::max(point_num_, static_cast<int>(std::ceil(trajectory_length_ / std::max(speed_ * dt_, 0.01))) + 1);
   }
 
-  void adsPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+  void adsStateCallback(const nav_msgs::Odometry::ConstPtr& msg)
   {
-    latest_ads_x_ = msg->pose.position.x;
-    latest_ads_y_ = msg->pose.position.y;
-    latest_ads_heading_ = protocolHeadingFromQuaternion(msg->pose.orientation);
+    latest_ads_x_ = msg->pose.pose.position.x;
+    latest_ads_y_ = msg->pose.pose.position.y;
+    latest_ads_heading_ = protocolHeadingFromQuaternion(msg->pose.pose.orientation);
+    latest_ads_speed_ = std::max(0.0, msg->twist.twist.linear.x);
     latest_ads_stamp_ = msg->header.stamp.isZero() ? ros::Time::now() : msg->header.stamp;
-    have_ads_pose_ = true;
+    have_ads_state_ = true;
   }
 
-  bool updatePoseFromAdsIfAvailable(const ros::Time& now)
+  bool updateStateFromAdsIfAvailable(const ros::Time& now)
   {
-    if (!use_ads_pose_)
+    if (!use_ads_state_)
     {
       return false;
     }
 
-    if (!have_ads_pose_)
+    if (!have_ads_state_)
     {
-      ROS_WARN_THROTTLE(1.0, "waiting for first ads_udp_pose, trajectory UDP is not sent yet");
+      ROS_WARN_THROTTLE(1.0, "waiting for first ads_udp_state, trajectory UDP is not sent yet");
       return false;
     }
 
-    if (ads_pose_timeout_s_ > 0.0 && (now - latest_ads_stamp_).toSec() > ads_pose_timeout_s_)
+    if (ads_state_timeout_s_ > 0.0 && (now - latest_ads_stamp_).toSec() > ads_state_timeout_s_)
     {
       ROS_WARN_THROTTLE(1.0,
-                        "latest ads_udp_pose is stale: age=%.3fs timeout=%.3fs, trajectory UDP is not sent",
+                        "latest ads_udp_state is stale: age=%.3fs timeout=%.3fs, trajectory UDP is not sent",
                         (now - latest_ads_stamp_).toSec(),
-                        ads_pose_timeout_s_);
+                        ads_state_timeout_s_);
       return false;
     }
 
     sim_x_ = latest_ads_x_;
     sim_y_ = latest_ads_y_;
     sim_heading_ = ego_trajectory_udp::normalizeHeadingDeg(latest_ads_heading_);
-    sim_speed_ = speed_;
+    sim_speed_ = latest_ads_speed_;
 
     if (!ads_global_initialized_)
     {
@@ -289,14 +308,16 @@ private:
                                                        turn_radius_,
                                                        speed_,
                                                        dt_,
-                                                       accel_time_);
+                                                       0.0);
+      rebuildGlobalArcLengths();
       ads_global_initialized_ = true;
       publishGlobalPath();
       saveGlobalTrajectoryToCSV();
-      ROS_INFO("initialized fixed global trajectory from first ads_udp_pose: x=%.3f y=%.3f heading=%.2fdeg",
+      ROS_INFO("initialized fixed global trajectory from first ads_udp_state: x=%.3f y=%.3f heading=%.2fdeg speed=%.2fmps",
                sim_x_,
                sim_y_,
-               sim_heading_);
+               sim_heading_,
+               sim_speed_);
     }
     return true;
   }
@@ -336,6 +357,54 @@ private:
   void publishGlobalPath()
   {
     global_path_pub_.publish(ego_trajectory_udp::makePath(trajectory_.points, frame_id_, ros::Time::now()));
+  }
+
+  // global_s_ 后面用于：按弧长 s 插值采样全局路径
+  void rebuildGlobalArcLengths()
+  {
+    global_s_.assign(trajectory_.points.size(), 0.0);
+    for (size_t i = 1; i < trajectory_.points.size(); ++i)
+    {
+      const double dx = trajectory_.points[i].x - trajectory_.points[i - 1].x;
+      const double dy = trajectory_.points[i].y - trajectory_.points[i - 1].y;
+      global_s_[i] = global_s_[i - 1] + std::hypot(dx, dy);
+    }
+  }
+
+  ego_trajectory_udp::TrajectoryPoint sampleGlobalPath(double s_m) const
+  {
+    if (trajectory_.points.empty() || global_s_.empty())
+    {
+      return ego_trajectory_udp::TrajectoryPoint();
+    }
+    if (trajectory_.points.size() == 1 || s_m <= 0.0)
+    {
+      return trajectory_.points.front();
+    }
+    if (s_m >= global_s_.back())
+    {
+      return trajectory_.points.back();
+    }
+
+    const auto upper = std::lower_bound(global_s_.begin(), global_s_.end(), s_m);
+    size_t hi = static_cast<size_t>(std::distance(global_s_.begin(), upper));
+    if (hi == 0)
+    {
+      hi = 1;
+    }
+    const size_t lo = hi - 1;
+    const double seg_len = std::max(global_s_[hi] - global_s_[lo], 1e-9);
+    const double ratio = clampValue((s_m - global_s_[lo]) / seg_len, 0.0, 1.0);
+    const auto& a = trajectory_.points[lo];
+    const auto& b = trajectory_.points[hi];
+
+    ego_trajectory_udp::TrajectoryPoint p;
+    p.x = a.x + (b.x - a.x) * ratio;
+    p.y = a.y + (b.y - a.y) * ratio;
+    p.heading_deg = ego_trajectory_udp::headingFromDelta(b.x - a.x, b.y - a.y);
+    p.vx = speed_;
+    p.ax = 0.0;
+    return p;
   }
 
   std::vector<ego_trajectory_udp::TrajectoryPoint> makeLocalChunk(size_t start_index) const
@@ -388,6 +457,91 @@ private:
       }
     }
     return best_index;
+  }
+
+  PathProjection nearestPathProjection(double x, double y) const
+  {
+    PathProjection best;
+    if (trajectory_.points.size() < 2 || global_s_.size() != trajectory_.points.size())
+    {
+      return best;
+    }
+
+    double best_dist2 = std::numeric_limits<double>::max();
+    for (size_t i = 0; i + 1 < trajectory_.points.size(); ++i)
+    {
+      const auto& a = trajectory_.points[i];
+      const auto& b = trajectory_.points[i + 1];
+      const double vx = b.x - a.x;
+      const double vy = b.y - a.y;
+      const double wx = x - a.x;
+      const double wy = y - a.y;
+      const double len2 = vx * vx + vy * vy;
+      const double t = len2 <= 1e-9 ? 0.0 : clampValue((wx * vx + wy * vy) / len2, 0.0, 1.0);
+      const double px = a.x + t * vx;
+      const double py = a.y + t * vy;
+      const double dx = x - px;
+      const double dy = y - py;
+      const double dist2 = dx * dx + dy * dy;
+      if (dist2 < best_dist2)
+      {
+        best_dist2 = dist2;
+        best.index = t > 0.5 ? i + 1 : i;
+        best.s_m = global_s_[i] + std::sqrt(len2) * t;
+      }
+    }
+    return best;
+  }
+
+  double speedProfileDistance(double current_speed_mps,
+                              double t_s,
+                              double& planned_speed_mps,
+                              double& planned_ax_mps2) const
+  {
+    const double start_speed = std::max(0.0, current_speed_mps);
+    if (accel_time_ <= 1e-6 || std::abs(speed_ - start_speed) < 1e-6)
+    {
+      planned_speed_mps = speed_;
+      planned_ax_mps2 = 0.0;
+      return speed_ * t_s;
+    }
+
+    const double accel = (speed_ - start_speed) / accel_time_;
+    if (t_s <= accel_time_)
+    {
+      planned_speed_mps = start_speed + accel * t_s;
+      planned_ax_mps2 = accel;
+      return start_speed * t_s + 0.5 * accel * t_s * t_s;
+    }
+
+    const double accel_distance = start_speed * accel_time_ + 0.5 * accel * accel_time_ * accel_time_;
+    planned_speed_mps = speed_;
+    planned_ax_mps2 = 0.0;
+    return accel_distance + speed_ * (t_s - accel_time_);
+  }
+
+//   从当前位置在全局路径上的投影弧长 projection.s_m 开始
+// 根据当前速度 sim_speed_ 做时间连续采样
+  std::vector<ego_trajectory_udp::TrajectoryPoint> makeTimedLocalChunk(double start_s_m,
+                                                                       double current_speed_mps) const
+  {
+    std::vector<ego_trajectory_udp::TrajectoryPoint> chunk;
+    chunk.reserve(static_cast<size_t>(point_num_));
+    for (int i = 0; i < point_num_; ++i)
+    {
+      const double t_s = static_cast<double>(i) * dt_;
+      double planned_speed = speed_;
+      double planned_ax = 0.0;
+      // 先根据当前速度和目标速度计算 t 时刻应该走多远
+      // 再沿固定全局路径取对应位置
+      const double travel_s = speedProfileDistance(current_speed_mps, t_s, planned_speed, planned_ax);
+      ego_trajectory_udp::TrajectoryPoint p = sampleGlobalPath(start_s_m + travel_s);
+      p.time_s = t_s;
+      p.vx = planned_speed;
+      p.ax = planned_ax;
+      chunk.push_back(p);
+    }
+    return chunk;
   }
 
   void updateKinematicState(double update_dt)
@@ -511,7 +665,7 @@ private:
   std::string buildInfoJson(uint32_t packet_index,
                             size_t payload_bytes,
                             size_t start_index,
-                            bool using_ads_pose) const
+                            bool using_ads_state) const
   {
     std::ostringstream oss;
     oss << "{"
@@ -523,7 +677,7 @@ private:
         << "\"packet_flag\":" << static_cast<int>(kPacketFlagSingle) << ","
         << "\"packet_index\":" << packet_index << ","
         << "\"payload_bytes\":" << payload_bytes << ","
-        << "\"pose_source\":\"" << (using_ads_pose ? "ads_udp_pose" : "fallback") << "\","
+        << "\"state_source\":\"" << (using_ads_state ? "ads_udp_state" : "fallback") << "\","
         << "\"sim_heading\":" << sim_heading_ << ","
         << "\"sim_speed\":" << sim_speed_ << ","
         << "\"sim_x\":" << sim_x_ << ","
@@ -571,7 +725,7 @@ private:
   ros::Publisher info_pub_;
   ros::Publisher global_path_pub_;
   ros::Publisher local_path_pub_;
-  ros::Subscriber ads_pose_sub_;
+  ros::Subscriber ads_state_sub_;
 
   std::string trajectory_name_ = "straight";
   std::string frame_id_ = "map";
@@ -596,19 +750,21 @@ private:
   int sender_ = 10;
   int version_ = 0xF0;
   int message_id_ = 2;
-  bool use_ads_pose_ = true;
-  std::string ads_pose_topic_ = "ads_udp_pose";
-  double ads_pose_timeout_s_ = 1.0;
+  bool use_ads_state_ = true;
+  std::string ads_state_topic_ = "ads_udp_state";
+  double ads_state_timeout_s_ = 1.0;
   uint8_t counter_ = 0;
   ego_trajectory_udp::Trajectory trajectory_;
+  std::vector<double> global_s_;
   double sim_x_ = 0.0;
   double sim_y_ = 0.0;
   double sim_heading_ = 0.0;
   double sim_speed_ = 0.0;
-  bool have_ads_pose_ = false;
+  bool have_ads_state_ = false;
   double latest_ads_x_ = 0.0;
   double latest_ads_y_ = 0.0;
   double latest_ads_heading_ = 0.0;
+  double latest_ads_speed_ = 0.0;
   ros::Time latest_ads_stamp_;
   bool ads_global_initialized_ = false;
 

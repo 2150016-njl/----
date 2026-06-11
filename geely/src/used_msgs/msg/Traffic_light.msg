@@ -1,0 +1,4 @@
+Header header
+uint8 left_light_status
+uint8 straight_light_status
+uint8 right_light_status

@@ -1,0 +1,18 @@
+(cl:in-package ros_interface-msg)
+(cl:export '(HEADER-VAL
+          HEADER
+          WARNING_COMMAND-VAL
+          WARNING_COMMAND
+          MOTION_ALARM-VAL
+          MOTION_ALARM
+          BRAKE_REPORT-VAL
+          BRAKE_REPORT
+          CHANGE_LANE_COMMAND-VAL
+          CHANGE_LANE_COMMAND
+          TRAJECTORY_LIMIT_COMMAND-VAL
+          TRAJECTORY_LIMIT_COMMAND
+          PARK_COMMAND-VAL
+          PARK_COMMAND
+          DRIVINGMODE_REPORT-VAL
+          DRIVINGMODE_REPORT
+))

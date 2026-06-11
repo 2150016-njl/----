@@ -1,0 +1,2 @@
+set(perception_ros_msg_MESSAGE_FILES "msg/AxisStatusPose.msg;msg/Point2f.msg;msg/Point3f.msg;msg/Point4f.msg;msg/Point3d.msg;msg/Matrix3f.msg;msg/Indices.msg;msg/EndPoints.msg;msg/Curve.msg;msg/CoreInfo.msg;msg/FreeSpaceInfos.msg;msg/SupplementInfo.msg;msg/Object.msg;msg/Objects.msg;msg/Lane.msg;msg/Lanes.msg;msg/Pose.msg;msg/PoseMap.msg;msg/LidarFrameMsg.msg;msg/RoadEdge.msg;msg/RoadEdges.msg;msg/RsPerceptionMsg.msg")
+set(perception_ros_msg_SERVICE_FILES "")

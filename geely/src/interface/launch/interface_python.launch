@@ -1,0 +1,9 @@
+<launch>
+
+    <node pkg="interface" type="planning_interface" name="planning_interface" output="screen"/>
+    <node pkg="webviz_all" type="visualization" name="rl_planning_marker" output="screen"/>
+    <node pkg="rl_planning" type="RL_planning_node.py" name="RL_planning_node" output="screen"/>
+    <node pkg="rl_planning" type="global_csp_node.py" name="global_csp_node" output="screen"/>
+    <node pkg="control_transfer" type="control_transfer.py" name="control_transfer" output="screen"/>
+
+</launch>

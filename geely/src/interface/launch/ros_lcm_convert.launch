@@ -1,0 +1,10 @@
+<launch>
+
+    <node pkg="athena_lcm2ros_convert" type="location_convert" name="location_convert" output="screen"/>
+    <node pkg="athena_lcm2ros_convert" type="prediction_convert" name="prediction_convert" output="screen"/>
+    <node pkg="athena_lcm2ros_convert" type="routing_convert" name="routing_convert" output="screen"/>
+    <node pkg="athena_lcm2ros_convert" type="obucmd_msg_convert" name="obucmd_msg_convert" output="screen"/>
+    <node pkg="athena_ros2lcm_convert" type="ros2lcm_planning_convert" name="ros2lcm_planning_convert" output="screen"/>
+
+
+</launch>

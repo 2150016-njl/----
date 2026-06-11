@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/UInt8MultiArray.h>
@@ -79,8 +80,10 @@ public:
     private_nh_.param<int>("recv_buffer_size", recv_buffer_size_, 4096);
     private_nh_.param<bool>("publish_pose", publish_pose_, true);
     private_nh_.param<std::string>("pose_topic", pose_topic_, "ads_udp_pose");
+    private_nh_.param<bool>("publish_state", publish_state_, true);
+    private_nh_.param<std::string>("state_topic", state_topic_, "ads_udp_state");
     private_nh_.param<std::string>("pose_frame_id", pose_frame_id_, "map");
-    private_nh_.param<std::string>("pose_source", pose_source_, "vut");
+    private_nh_.param<std::string>("pose_source", pose_source_, "target");
 
     validateParams();
     openSocket();
@@ -90,6 +93,10 @@ public:
     if (publish_pose_)
     {
       pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(pose_topic_, 20);
+    }
+    if (publish_state_)
+    {
+      state_pub_ = nh_.advertise<nav_msgs::Odometry>(state_topic_, 20);
     }
 
     ROS_INFO("ADS UDP decoder listening on %s:%d, payload=last %zu bytes, endian=Intel/little, pose_source=%s",
@@ -293,6 +300,30 @@ private:
     pose_pub_.publish(pose);
   }
 
+  void publishState(const ego_trajectory_udp::ads_udp::DecodedPacket& decoded)
+  {
+    if (!publish_state_)
+    {
+      return;
+    }
+
+    double x_m = 0.0;
+    double y_m = 0.0;
+    decodedPoseXy(decoded, x_m, y_m);
+
+    nav_msgs::Odometry state;
+    state.header.stamp = ros::Time::now();
+    state.header.frame_id = pose_frame_id_;
+    state.child_frame_id = "target";
+    state.pose.pose.position.x = x_m;
+    state.pose.pose.position.y = y_m;
+    state.pose.pose.position.z = 0.0;
+    state.pose.pose.orientation =
+        ego_trajectory_udp::yawToQuaternion(ego_trajectory_udp::protocolHeadingToYawRad(decoded.heading_deg));
+    state.twist.twist.linear.x = decoded.speed_kmh / 3.6;
+    state_pub_.publish(state);
+  }
+
   void handleDatagram(const uint8_t* data, std::size_t size, const sockaddr_in& remote_addr)
   {
     // 处理一包 UDP 数据。
@@ -328,6 +359,7 @@ private:
       decoded_msg.data = addTransportToJson(decoded, remote_addr, size);
       decoded_pub_.publish(decoded_msg);
       publishPose(decoded);
+      publishState(decoded);
 
       if (publish_raw_payload_)
       {
@@ -369,6 +401,7 @@ private:
   ros::Publisher decoded_pub_;
   ros::Publisher raw_pub_;
   ros::Publisher pose_pub_;
+  ros::Publisher state_pub_;
 
   std::string bind_ip_ = "0.0.0.0";
   int local_port_ = 31100;
@@ -378,8 +411,10 @@ private:
   int recv_buffer_size_ = 4096;
   bool publish_pose_ = true;
   std::string pose_topic_ = "ads_udp_pose";
+  bool publish_state_ = true;
+  std::string state_topic_ = "ads_udp_state";
   std::string pose_frame_id_ = "map";
-  std::string pose_source_ = "vut";
+  std::string pose_source_ = "target";
   int socket_fd_ = -1;
 };
 

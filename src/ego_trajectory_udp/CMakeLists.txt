@@ -24,6 +24,9 @@ include_directories(
 add_executable(ego_trajectory_udp_node src/ego_trajectory_udp_node.cpp)
 target_link_libraries(ego_trajectory_udp_node ${catkin_LIBRARIES})
 
+add_executable(trajectory_polynomial_udp_node src/trajectory_polynomial_udp_node.cpp)
+target_link_libraries(trajectory_polynomial_udp_node ${catkin_LIBRARIES})
+
 add_executable(ego_trajectory_visualizer_node src/ego_trajectory_visualizer_node.cpp)
 target_link_libraries(ego_trajectory_visualizer_node ${catkin_LIBRARIES})
 
@@ -35,6 +38,7 @@ target_link_libraries(ads_udp_pcap_decode ${catkin_LIBRARIES})
 
 install(TARGETS
   ego_trajectory_udp_node
+  trajectory_polynomial_udp_node
   ego_trajectory_visualizer_node
   ads_udp_decoder_node
   ads_udp_pcap_decode

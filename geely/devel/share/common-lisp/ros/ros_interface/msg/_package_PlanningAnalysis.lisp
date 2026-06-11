@@ -1,0 +1,20 @@
+(cl:in-package ros_interface-msg)
+(cl:export '(HEADER-VAL
+          HEADER
+          FRAME_UPDATE_TIME-VAL
+          FRAME_UPDATE_TIME
+          GENERATOR_TIME-VAL
+          GENERATOR_TIME
+          EVALUATOR_TIME-VAL
+          EVALUATOR_TIME
+          SELECTOR_TIME-VAL
+          SELECTOR_TIME
+          PLANNING_PARKING_DEBUG-VAL
+          PLANNING_PARKING_DEBUG
+          DIS_TO_CENTER_LINE-VAL
+          DIS_TO_CENTER_LINE
+          DIFF_TO_VELOCITY-VAL
+          DIFF_TO_VELOCITY
+          REFERENCLINE_KAPPA-VAL
+          REFERENCLINE_KAPPA
+))

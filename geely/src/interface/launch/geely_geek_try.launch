@@ -1,0 +1,25 @@
+<launch>
+
+    <!-- GNSS 转换 -->
+    <node pkg="geely_location_msgs" type="gnss_converter_node" name="gnss_converter_node" output="screen"/>
+
+    <!-- 全局路径规划模块 -->
+    <node pkg="Planning_Module" type="Planning_Module_start" name="planning_module_start" output="screen"/>
+
+    <!-- Trajectory 转换成 global route -->
+    <node pkg="global_route_msgs" type="route_converter_node" name="route_converter_node" output="screen"/>
+
+    <!-- vehicle info -->
+    <node pkg="vehicle_info_msgs" type="object_and_loc_to_vehicle_info_node" name="vehicle_info_msgs_node" output="screen"/>
+
+    <!-- RL Planning -->
+    <!-- <node pkg="rl_planning" type="RL_planning_node.py" name="RL_planning_node" output="screen"/>
+    <node pkg="rl_planning" type="global_csp_node.py" name="global_csp_node" output="screen"/> -->
+
+    <!-- control transfer -->
+    <node pkg="control_transfer" type="control_transfer.py" name="control_transfer" output="screen"/>
+
+    <!-- 可视化 -->
+    <node pkg="webviz_all" type="visualization" name="webviz_all_visualization" output="screen"/>
+
+</launch>

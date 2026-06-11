@@ -1,0 +1,11 @@
+# generated from genmsg/cmake/pkg-genmsg.context.in
+
+messages_str = "/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/AxisStatusPose.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Point2f.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Point3f.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Point4f.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Point3d.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Matrix3f.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Indices.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/EndPoints.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Curve.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/CoreInfo.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/FreeSpaceInfos.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/SupplementInfo.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Object.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Objects.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Lane.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Lanes.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/Pose.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/PoseMap.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/LidarFrameMsg.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/RoadEdge.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/RoadEdges.msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg/RsPerceptionMsg.msg"
+services_str = ""
+pkg_name = "perception_ros_msg"
+dependencies_str = "std_msgs;geometry_msgs;sensor_msgs"
+langs = "gencpp;geneus;genlisp;gennodejs;genpy"
+dep_include_paths_str = "perception_ros_msg;/home/plusgo/geely_1225_tongji/geely/src/athena/ros_msg/msg;std_msgs;/opt/ros/melodic/share/std_msgs/cmake/../msg;geometry_msgs;/opt/ros/melodic/share/geometry_msgs/cmake/../msg;sensor_msgs;/opt/ros/melodic/share/sensor_msgs/cmake/../msg"
+PYTHON_EXECUTABLE = "/usr/bin/python2"
+package_has_static_sources = '' == 'TRUE'
+genmsg_check_deps_script = "/opt/ros/melodic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py"

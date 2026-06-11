@@ -1,0 +1,21 @@
+(cl:defpackage rl_planning-msg
+  (:use )
+  (:export
+   "<CSP>"
+   "CSP"
+   "<PLANNINGPATH>"
+   "PLANNINGPATH"
+   "<POINT>"
+   "POINT"
+   "<RLPLANNINGPATH>"
+   "RLPLANNINGPATH"
+   "<TRAJECTORY_PLANNING>"
+   "TRAJECTORY_PLANNING"
+   "<VECTOR3D>"
+   "VECTOR3D"
+   "<VEHICLEINFO>"
+   "VEHICLEINFO"
+   "<VEHICLEINFOBATCH>"
+   "VEHICLEINFOBATCH"
+  ))
+
