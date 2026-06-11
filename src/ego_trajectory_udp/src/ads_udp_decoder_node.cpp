@@ -12,11 +12,11 @@
 #include <vector>
 
 #include <geometry_msgs/PoseStamped.h>
-#include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/UInt8MultiArray.h>
 
+#include "ego_trajectory_udp/AdsUdpState.h"
 #include "ego_trajectory_udp/ads_udp_protocol.hpp"
 #include "ego_trajectory_udp/ego_trajectory_common.hpp"
 
@@ -96,7 +96,7 @@ public:
     }
     if (publish_state_)
     {
-      state_pub_ = nh_.advertise<nav_msgs::Odometry>(state_topic_, 20);
+      state_pub_ = nh_.advertise<ego_trajectory_udp::AdsUdpState>(state_topic_, 20);
     }
 
     ROS_INFO("ADS UDP decoder listening on %s:%d, payload=last %zu bytes, endian=Intel/little, pose_source=%s",
@@ -311,16 +311,16 @@ private:
     double y_m = 0.0;
     decodedPoseXy(decoded, x_m, y_m);
 
-    nav_msgs::Odometry state;
+    ego_trajectory_udp::AdsUdpState state;
     state.header.stamp = ros::Time::now();
     state.header.frame_id = pose_frame_id_;
-    state.child_frame_id = "target";
-    state.pose.pose.position.x = x_m;
-    state.pose.pose.position.y = y_m;
-    state.pose.pose.position.z = 0.0;
-    state.pose.pose.orientation =
-        ego_trajectory_udp::yawToQuaternion(ego_trajectory_udp::protocolHeadingToYawRad(decoded.heading_deg));
-    state.twist.twist.linear.x = decoded.speed_kmh / 3.6;
+    state.x_m = x_m;
+    state.y_m = y_m;
+    state.heading_deg = ego_trajectory_udp::normalizeHeadingDeg(decoded.heading_deg);
+    state.speed_mps = decoded.speed_kmh / 3.6;
+    state.ax_mps2 = decoded.ax_mps2;
+    state.ay_mps2 = decoded.ay_mps2;
+    state.yaw_rate_dps = decoded.dyaw_dps;
     state_pub_.publish(state);
   }
 

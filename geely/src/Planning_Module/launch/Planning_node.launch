@@ -1,7 +1,0 @@
-<launch>
-  <node
-    pkg="Planning_Module"
-    type="Planning_Module_start"
-    name="Planning_Module_start"
-  />
-</launch>

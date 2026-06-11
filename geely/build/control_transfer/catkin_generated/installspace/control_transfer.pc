@@ -1,8 +1,0 @@
-prefix=/home/plusgo/geely_1225_tongji/geely/install
-
-Name: control_transfer
-Description: Description of control_transfer
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

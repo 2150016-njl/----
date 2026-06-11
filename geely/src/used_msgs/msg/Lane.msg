@@ -1,4 +1,0 @@
-uint8 lane_idx
-bool left_traverse_flag 
-bool right_traverse_flag
-float64 lane_width

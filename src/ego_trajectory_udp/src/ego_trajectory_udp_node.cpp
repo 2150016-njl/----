@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <fstream>
 
-#include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
@@ -20,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "ego_trajectory_udp/AdsUdpState.h"
 #include "ego_trajectory_udp/ego_trajectory_common.hpp"
 
 namespace
@@ -36,18 +36,6 @@ int64_t quantize(double value, double factor, int64_t low, int64_t high)
 {
   const int64_t raw = static_cast<int64_t>(std::llround(value / factor));
   return clampValue<int64_t>(raw, low, high);
-}
-
-double yawRadFromQuaternion(const geometry_msgs::Quaternion& q)
-{
-  const double siny_cosp = 2.0 * (q.w * q.z + q.x * q.y);
-  const double cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);
-  return std::atan2(siny_cosp, cosy_cosp);
-}
-
-double protocolHeadingFromQuaternion(const geometry_msgs::Quaternion& q)
-{
-  return ego_trajectory_udp::normalizeHeadingDeg(90.0 - yawRadFromQuaternion(q) * 180.0 / ego_trajectory_udp::kPi);
 }
 
 struct PathProjection
@@ -259,12 +247,12 @@ private:
     return std::max(point_num_, static_cast<int>(std::ceil(trajectory_length_ / std::max(speed_ * dt_, 0.01))) + 1);
   }
 
-  void adsStateCallback(const nav_msgs::Odometry::ConstPtr& msg)
+  void adsStateCallback(const ego_trajectory_udp::AdsUdpState::ConstPtr& msg)
   {
-    latest_ads_x_ = msg->pose.pose.position.x;
-    latest_ads_y_ = msg->pose.pose.position.y;
-    latest_ads_heading_ = protocolHeadingFromQuaternion(msg->pose.pose.orientation);
-    latest_ads_speed_ = std::max(0.0, msg->twist.twist.linear.x);
+    latest_ads_x_ = msg->x_m;
+    latest_ads_y_ = msg->y_m;
+    latest_ads_heading_ = ego_trajectory_udp::normalizeHeadingDeg(msg->heading_deg);
+    latest_ads_speed_ = std::max(0.0, msg->speed_mps);
     latest_ads_stamp_ = msg->header.stamp.isZero() ? ros::Time::now() : msg->header.stamp;
     have_ads_state_ = true;
   }

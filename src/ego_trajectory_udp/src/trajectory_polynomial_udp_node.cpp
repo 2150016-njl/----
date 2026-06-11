@@ -13,12 +13,12 @@
 #include <string>
 #include <vector>
 
-#include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/UInt8MultiArray.h>
 
+#include "ego_trajectory_udp/AdsUdpState.h"
 #include "ego_trajectory_udp/ego_trajectory_common.hpp"
 
 namespace
@@ -33,6 +33,7 @@ struct PathProjection
   double s_m = 0.0;
   double d_m = 0.0;
   double heading_deg = 0.0;
+  double curvature = 0.0;
 };
 
 struct FrenetState
@@ -43,6 +44,14 @@ struct FrenetState
   double d = 0.0;
   double d_d = 0.0;
   double d_dd = 0.0;
+};
+
+struct ReferenceSample
+{
+  double x = 0.0;
+  double y = 0.0;
+  double heading_deg = 0.0;
+  double curvature = 0.0;
 };
 
 struct PolynomialCoefficients
@@ -66,16 +75,9 @@ T clampValue(T value, T low, T high)
   return std::max(low, std::min(high, value));
 }
 
-double yawRadFromQuaternion(const geometry_msgs::Quaternion& q)
+double protocolHeadingFromYawRad(double yaw_rad)
 {
-  const double siny_cosp = 2.0 * (q.w * q.z + q.x * q.y);
-  const double cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);
-  return std::atan2(siny_cosp, cosy_cosp);
-}
-
-double protocolHeadingFromQuaternion(const geometry_msgs::Quaternion& q)
-{
-  return ego_trajectory_udp::normalizeHeadingDeg(90.0 - yawRadFromQuaternion(q) * 180.0 / ego_trajectory_udp::kPi);
+  return ego_trajectory_udp::normalizeHeadingDeg(90.0 - yaw_rad * 180.0 / ego_trajectory_udp::kPi);
 }
 
 double normalizeAngleRad(double angle)
@@ -108,6 +110,13 @@ double quinticFirstDerivative(const PolynomialCoefficients& c, double t)
   return c.d_a1 + 2.0 * c.d_a2 * t + 3.0 * c.d_a3 * t2 + 4.0 * c.d_a4 * t3 + 5.0 * c.d_a5 * t4;
 }
 
+double quinticSecondDerivative(const PolynomialCoefficients& c, double t)
+{
+  const double t2 = t * t;
+  const double t3 = t2 * t;
+  return 2.0 * c.d_a2 + 6.0 * c.d_a3 * t + 12.0 * c.d_a4 * t2 + 20.0 * c.d_a5 * t3;
+}
+
 double quarticPoint(const PolynomialCoefficients& c, double t)
 {
   const double t2 = t * t;
@@ -127,6 +136,15 @@ double quarticSecondDerivative(const PolynomialCoefficients& c, double t)
 {
   const double t2 = t * t;
   return 2.0 * c.s_a2 + 6.0 * c.s_a3 * t + 12.0 * c.s_a4 * t2;
+}
+
+double guardedFrenetScale(double scale)
+{
+  if (std::abs(scale) >= 0.1)
+  {
+    return scale;
+  }
+  return scale < 0.0 ? -0.1 : 0.1;
 }
 }  // namespace
 
@@ -192,11 +210,11 @@ public:
       }
 
       const PathProjection projection = nearestPathProjection(sim_x_, sim_y_);
+      const double plan_time = static_cast<double>(point_num_) * dt_;
       const size_t target_index = std::min(projection.index + static_cast<size_t>(point_num_),
                                            trajectory_.points.empty() ? size_t(0) : trajectory_.points.size() - 1);
       const FrenetState start = makeStartState(projection);
       const FrenetState target = makeTargetState(target_index);
-      const double plan_time = static_cast<double>(point_num_) * dt_;
       const PolynomialCoefficients coefficients = solvePolynomials(start, target, plan_time);
       const std::vector<ego_trajectory_udp::TrajectoryPoint> local_points = makeLocalTrajectory(coefficients);
       const std::vector<uint8_t> payload = packPacket(coefficients);
@@ -251,12 +269,14 @@ private:
     return std::max(point_num_ + 1, static_cast<int>(std::ceil(trajectory_length_ / std::max(speed_ * dt_, 0.01))) + 1);
   }
 
-  void adsStateCallback(const nav_msgs::Odometry::ConstPtr& msg)
+  void adsStateCallback(const ego_trajectory_udp::AdsUdpState::ConstPtr& msg)
   {
-    latest_ads_x_ = msg->pose.pose.position.x;
-    latest_ads_y_ = msg->pose.pose.position.y;
-    latest_ads_heading_ = protocolHeadingFromQuaternion(msg->pose.pose.orientation);
-    latest_ads_speed_ = std::max(0.0, msg->twist.twist.linear.x);
+    latest_ads_x_ = msg->x_m;
+    latest_ads_y_ = msg->y_m;
+    latest_ads_heading_ = ego_trajectory_udp::normalizeHeadingDeg(msg->heading_deg);
+    latest_ads_speed_ = std::max(0.0, msg->speed_mps);
+    latest_ads_ax_ = msg->ax_mps2;
+    latest_ads_ay_ = msg->ay_mps2;
     latest_ads_stamp_ = msg->header.stamp.isZero() ? ros::Time::now() : msg->header.stamp;
     have_ads_state_ = true;
   }
@@ -281,6 +301,8 @@ private:
     sim_y_ = latest_ads_y_;
     sim_heading_ = ego_trajectory_udp::normalizeHeadingDeg(latest_ads_heading_);
     sim_speed_ = latest_ads_speed_;
+    sim_ax_ = latest_ads_ax_;
+    sim_ay_ = latest_ads_ay_;
 
     if (!global_initialized_)
     {
@@ -316,21 +338,52 @@ private:
       const double dy = trajectory_.points[i].y - trajectory_.points[i - 1].y;
       global_s_[i] = global_s_[i - 1] + std::hypot(dx, dy);
     }
+
+    global_kappa_.assign(trajectory_.points.size(), 0.0);
+    if (trajectory_.points.size() < 3)
+    {
+      return;
+    }
+
+    for (size_t i = 0; i < trajectory_.points.size(); ++i)
+    {
+      const size_t prev = i == 0 ? 0 : i - 1;
+      const size_t next = i + 1 < trajectory_.points.size() ? i + 1 : i;
+      const double ds = global_s_[next] - global_s_[prev];
+      if (ds <= 1e-9 || prev == next)
+      {
+        global_kappa_[i] = 0.0;
+        continue;
+      }
+
+      const double yaw_prev = ego_trajectory_udp::protocolHeadingToYawRad(trajectory_.points[prev].heading_deg);
+      const double yaw_next = ego_trajectory_udp::protocolHeadingToYawRad(trajectory_.points[next].heading_deg);
+      global_kappa_[i] = normalizeAngleRad(yaw_next - yaw_prev) / ds;
+    }
   }
 
-  ego_trajectory_udp::TrajectoryPoint sampleGlobalPath(double s_m) const
+  ReferenceSample sampleReferencePath(double s_m) const
   {
+    ReferenceSample ref;
     if (trajectory_.points.empty() || global_s_.empty())
     {
-      return ego_trajectory_udp::TrajectoryPoint();
+      return ref;
     }
     if (trajectory_.points.size() == 1 || s_m <= 0.0)
     {
-      return trajectory_.points.front();
+      ref.x = trajectory_.points.front().x;
+      ref.y = trajectory_.points.front().y;
+      ref.heading_deg = trajectory_.points.front().heading_deg;
+      ref.curvature = global_kappa_.empty() ? 0.0 : global_kappa_.front();
+      return ref;
     }
     if (s_m >= global_s_.back())
     {
-      return trajectory_.points.back();
+      ref.x = trajectory_.points.back().x;
+      ref.y = trajectory_.points.back().y;
+      ref.heading_deg = trajectory_.points.back().heading_deg;
+      ref.curvature = global_kappa_.empty() ? 0.0 : global_kappa_.back();
+      return ref;
     }
 
     const auto upper = std::lower_bound(global_s_.begin(), global_s_.end(), s_m);
@@ -345,13 +398,16 @@ private:
     const auto& a = trajectory_.points[lo];
     const auto& b = trajectory_.points[hi];
 
-    ego_trajectory_udp::TrajectoryPoint p;
-    p.x = a.x + (b.x - a.x) * ratio;
-    p.y = a.y + (b.y - a.y) * ratio;
-    p.heading_deg = ego_trajectory_udp::headingFromDelta(b.x - a.x, b.y - a.y);
-    p.vx = speed_;
-    p.ax = 0.0;
-    return p;
+    ref.x = a.x + (b.x - a.x) * ratio;
+    ref.y = a.y + (b.y - a.y) * ratio;
+    const double yaw_a = ego_trajectory_udp::protocolHeadingToYawRad(a.heading_deg);
+    const double yaw_b = ego_trajectory_udp::protocolHeadingToYawRad(b.heading_deg);
+    ref.heading_deg = protocolHeadingFromYawRad(yaw_a + normalizeAngleRad(yaw_b - yaw_a) * ratio);
+    if (global_kappa_.size() == trajectory_.points.size())
+    {
+      ref.curvature = global_kappa_[lo] + (global_kappa_[hi] - global_kappa_[lo]) * ratio;
+    }
+    return ref;
   }
 
   PathProjection nearestPathProjection(double x, double y) const
@@ -391,6 +447,7 @@ private:
         best.d_m = dx * left_x + dy * left_y;
       }
     }
+    best.curvature = sampleReferencePath(best.s_m).curvature;
     return best;
   }
 
@@ -403,10 +460,25 @@ private:
     const double ego_yaw = ego_trajectory_udp::protocolHeadingToYawRad(sim_heading_);
     const double path_yaw = ego_trajectory_udp::protocolHeadingToYawRad(projection.heading_deg);
     const double delta_yaw = normalizeAngleRad(ego_yaw - path_yaw);
-    state.s_d = sim_speed_ * std::cos(delta_yaw);
+    const double frenet_scale = guardedFrenetScale(1.0 - projection.curvature * projection.d_m);
+    state.s_d = sim_speed_ * std::cos(delta_yaw) / frenet_scale;
     state.d_d = sim_speed_ * std::sin(delta_yaw);
-    state.s_dd = 0.0;
-    state.d_dd = 0.0;
+
+    const double ego_forward_x = std::cos(ego_yaw);
+    const double ego_forward_y = std::sin(ego_yaw);
+    const double ego_left_x = -std::sin(ego_yaw);
+    const double ego_left_y = std::cos(ego_yaw);
+    const double accel_x = sim_ax_ * ego_forward_x + sim_ay_ * ego_left_x;
+    const double accel_y = sim_ax_ * ego_forward_y + sim_ay_ * ego_left_y;
+
+    const double path_forward_x = std::cos(path_yaw);
+    const double path_forward_y = std::sin(path_yaw);
+    const double path_left_x = -std::sin(path_yaw);
+    const double path_left_y = std::cos(path_yaw);
+    const double accel_along_path = accel_x * path_forward_x + accel_y * path_forward_y;
+    const double accel_left_of_path = accel_x * path_left_x + accel_y * path_left_y;
+    state.s_dd = (accel_along_path + projection.curvature * state.d_d * state.s_d) / frenet_scale;
+    state.d_dd = accel_left_of_path;
     return state;
   }
 
@@ -419,8 +491,8 @@ private:
     }
     target_index = std::min(target_index, trajectory_.points.size() - 1);
     state.s = global_s_[target_index];
-    state.s_d = speed_;
-    state.s_dd = 0.0;
+    state.s_d = trajectory_.points[target_index].vx;
+    state.s_dd = trajectory_.points[target_index].ax;
     state.d = 0.0;
     state.d_d = 0.0;
     state.d_dd = 0.0;
@@ -467,36 +539,25 @@ private:
       const double s_d = quarticFirstDerivative(coefficients, t);
       const double d_d = quinticFirstDerivative(coefficients, t);
       const double s_dd = quarticSecondDerivative(coefficients, t);
-      const ego_trajectory_udp::TrajectoryPoint ref = sampleGlobalPath(s);
+      const double d_dd = quinticSecondDerivative(coefficients, t);
+      const ReferenceSample ref = sampleReferencePath(s);
       const double ref_yaw = ego_trajectory_udp::protocolHeadingToYawRad(ref.heading_deg);
       const double left_x = -std::sin(ref_yaw);
       const double left_y = std::cos(ref_yaw);
+      const double frenet_scale = guardedFrenetScale(1.0 - ref.curvature * d);
+      const double longitudinal_velocity = frenet_scale * s_d;
+      const double longitudinal_accel = frenet_scale * s_dd - ref.curvature * d_d * s_d;
+      const double speed = std::hypot(longitudinal_velocity, d_d);
+      const double yaw = ref_yaw + std::atan2(d_d, longitudinal_velocity);
 
       ego_trajectory_udp::TrajectoryPoint p;
       p.x = ref.x + d * left_x;
       p.y = ref.y + d * left_y;
       p.time_s = t;
-      p.vx = std::hypot(s_d, d_d);
-      p.ax = s_dd;
-      p.heading_deg = ref.heading_deg;
+      p.vx = speed;
+      p.ax = speed > 1e-6 ? (longitudinal_velocity * longitudinal_accel + d_d * d_dd) / speed : 0.0;
+      p.heading_deg = protocolHeadingFromYawRad(yaw);
       points.push_back(p);
-    }
-
-    for (size_t i = 0; i < points.size(); ++i)
-    {
-      double dx = 0.0;
-      double dy = 0.0;
-      if (i + 1 < points.size())
-      {
-        dx = points[i + 1].x - points[i].x;
-        dy = points[i + 1].y - points[i].y;
-      }
-      else if (i > 0)
-      {
-        dx = points[i].x - points[i - 1].x;
-        dy = points[i].y - points[i - 1].y;
-      }
-      points[i].heading_deg = ego_trajectory_udp::headingFromDelta(dx, dy);
     }
     return points;
   }
@@ -589,7 +650,7 @@ private:
                                 payload.size(),
                                 0,
                                 reinterpret_cast<sockaddr*>(&target_addr_),
-                                sizeof(target_addr_)); // 真正发 UDP 给上游设备
+                                sizeof(target_addr_));
     if (sent < 0)
     {
       ROS_ERROR_STREAM("sendto() failed: " << strerror(errno));
@@ -610,6 +671,7 @@ private:
                             const FrenetState& target,
                             const PolynomialCoefficients& c) const
   {
+    const double plan_time = static_cast<double>(point_num_) * dt_;
     std::ostringstream oss;
     oss << "{"
         << "\"counter\":" << static_cast<int>(counter_) << ","
@@ -620,10 +682,19 @@ private:
         << "\"message_id\":" << message_id_ << ","
         << "\"trajectory\":\"" << trajectory_.name << "\","
         << "\"projection_index\":" << projection.index << ","
+        << "\"projection_curvature\":" << projection.curvature << ","
+        << "\"plan_time\":" << plan_time << ","
         << "\"start_s\":" << start.s << ","
+        << "\"start_s_d\":" << start.s_d << ","
+        << "\"start_s_dd\":" << start.s_dd << ","
         << "\"start_d\":" << start.d << ","
+        << "\"start_d_d\":" << start.d_d << ","
+        << "\"start_d_dd\":" << start.d_dd << ","
         << "\"target_s\":" << target.s << ","
         << "\"target_speed\":" << target.s_d << ","
+        << "\"target_accel\":" << target.s_dd << ","
+        << "\"predicted_end_s\":" << quarticPoint(c, plan_time) << ","
+        << "\"predicted_end_d\":" << quinticPoint(c, plan_time) << ","
         << "\"d_coefficients\":[" << c.d_a0 << "," << c.d_a1 << "," << c.d_a2 << ","
         << c.d_a3 << "," << c.d_a4 << "," << c.d_a5 << "],"
         << "\"s_coefficients\":[" << c.s_a0 << "," << c.s_a1 << "," << c.s_a2 << ","
@@ -663,14 +734,19 @@ private:
   double latest_ads_y_ = 0.0;
   double latest_ads_heading_ = 0.0;
   double latest_ads_speed_ = 0.0;
+  double latest_ads_ax_ = 0.0;
+  double latest_ads_ay_ = 0.0;
   ros::Time latest_ads_stamp_;
   bool global_initialized_ = false;
   ego_trajectory_udp::Trajectory trajectory_;
   std::vector<double> global_s_;
+  std::vector<double> global_kappa_;
   double sim_x_ = 0.0;
   double sim_y_ = 0.0;
   double sim_heading_ = 0.0;
   double sim_speed_ = 0.0;
+  double sim_ax_ = 0.0;
+  double sim_ay_ = 0.0;
   uint8_t counter_ = 0;
   uint32_t packet_index_ = 0;
   int socket_fd_ = -1;

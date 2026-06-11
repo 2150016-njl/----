@@ -1,2 +1,0 @@
-GNSS_Decoding_py:Planning_Module:athena/ros_interface:athena/ros_msg:control_transfer:geely_location_msgs:global_route_msgs:interface:plusgo_msgs:rl_planning:used_msgs:vehicle_info_msgs:webviz_all
--DCATKIN_DEVEL_PREFIX=/home/plusgo/geely_1225_tongji/geely/devel -DCMAKE_INSTALL_PREFIX=/home/plusgo/geely_1225_tongji/geely/install -G Unix Makefiles

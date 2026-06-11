@@ -1,8 +1,0 @@
-<launch>
-  <!-- 强烈建议在联机实车环境下关闭仿真时间 -->
-  <param name="use_sim_time" value="false"/>
-
-  <node pkg="rl_planning_tools" type="object_and_loc_to_vehicle_info_node"
-        name="object_and_loc_to_vehicle_info_node" output="screen">
-  </node>
-</launch>

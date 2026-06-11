@@ -1,1 +1,0 @@
-AxisStatusPose[] status_poses 
