@@ -78,7 +78,8 @@ inline void egoLocalToMap(double ego_x,
   const double lx = -std::sin(yaw);
   const double ly = std::cos(yaw);
   
-  x = ego_x + forward_m * fx + left_m * lx;
+  // x = ego_x + forward_m * fx + left_m * lx;
+  x = -(ego_x + forward_m * fx + left_m * lx);
   y = ego_y + forward_m * fy + left_m * ly;
 }
 
@@ -163,7 +164,9 @@ inline std::vector<TrajectoryPoint> generateBasePoints(const std::string& name,
     }
 
     TrajectoryPoint p;
-    egoLocalToMap(ego_x, ego_y, ego_heading_deg, forward, left, p.x, p.y);
+    // egoLocalToMap(ego_x, ego_y, ego_heading_deg, forward, left, p.x, p.y);
+    p.x = forward; 
+    p.y = left;
     p.time_s = static_cast<double>(i) * dt;
     if (accel_time_s > 1e-6)
     {

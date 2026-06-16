@@ -479,6 +479,16 @@ private:
     const double accel_left_of_path = accel_x * path_left_x + accel_y * path_left_y;
     state.s_dd = (accel_along_path + projection.curvature * state.d_d * state.s_d) / frenet_scale;
     state.d_dd = accel_left_of_path;
+    // ==================== 打印关键信息 ====================
+    ROS_INFO_STREAM("=== Frenet Start State Conversion ==="
+                 << "\n[1. Ego Cartesian] speed: " << sim_speed_ << " m/s, yaw: " << ego_yaw 
+                 << " rad, ax: " << sim_ax_ << " m/s^2, ay: " << sim_ay_ << " m/s^2"
+                 << "\n[2. Path Reference] s: " << projection.s_m << " m, d: " << projection.d_m 
+                 << " m, path_yaw: " << path_yaw << " rad, curvature: " << projection.curvature
+                 << "\n[3. Intermediates] delta_yaw: " << delta_yaw << " rad, frenet_scale: " << frenet_scale
+                 << "\n[4. Frenet Output] s: " << state.s << ", s_d: " << state.s_d << ", s_dd: " << state.s_dd
+                 << "\n                   d: " << state.d << ", d_d: " << state.d_d << ", d_dd: " << state.d_dd);
+    // ======================================================
     return state;
   }
 
@@ -491,8 +501,8 @@ private:
     }
     target_index = std::min(target_index, trajectory_.points.size() - 1);
     state.s = global_s_[target_index];
-    state.s_d = trajectory_.points[target_index].vx;
-    state.s_dd = trajectory_.points[target_index].ax;
+    state.s_d = 3.0; //trajectory_.points[target_index].vx;
+    state.s_dd = 0.0;//trajectory_.points[target_index].ax;
     state.d = 0.0;
     state.d_d = 0.0;
     state.d_dd = 0.0;
@@ -524,8 +534,24 @@ private:
     const double accel_delta = target.s_dd - 2.0 * c.s_a2;
     c.s_a3 = speed_delta / t2 - accel_delta / (3.0 * t);
     c.s_a4 = accel_delta / (4.0 * t2) - speed_delta / (2.0 * t3);
+// ==================== 打印关键参数 ====================
+    // 使用 ROS_DEBUG_STREAM 或 ROS_INFO_STREAM
+    ROS_INFO_STREAM("=== Solved Frenet Polynomials ==="
+                    << "\nTime (t): " << t << " s"
+                    << "\nLateral (d) Quintic Coeffs (a0~a5): "
+                    << c.d_a0 << ", " << c.d_a1 << ", " << c.d_a2 << ", " 
+                    << c.d_a3 << ", " << c.d_a4 << ", " << c.d_a5
+                    << "\nLongitudinal (s) Quartic Coeffs (a0~a4): "
+                    << c.s_a0 << ", " << c.s_a1 << ", " << c.s_a2 << ", " 
+                    << c.s_a3 << ", " << c.s_a4);
+    // ======================================================
+
+
     return c;
   }
+
+
+
 
   std::vector<ego_trajectory_udp::TrajectoryPoint> makeLocalTrajectory(const PolynomialCoefficients& coefficients) const
   {

@@ -3,6 +3,6 @@ prefix=/home/nie/----/devel
 Name: ego_trajectory_udp
 Description: Description of ego_trajectory_udp
 Version: 0.1.0
-Cflags: -I/home/nie/----/src/ego_trajectory_udp/include
+Cflags: -I/home/nie/----/devel/include -I/home/nie/----/src/ego_trajectory_udp/include
 Libs: -L${prefix}/lib 
-Requires: geometry_msgs nav_msgs roscpp std_msgs visualization_msgs
+Requires: geometry_msgs message_runtime nav_msgs roscpp std_msgs visualization_msgs

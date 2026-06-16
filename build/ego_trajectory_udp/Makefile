@@ -56,6 +56,17 @@ CMAKE_BINARY_DIR = /home/nie/----/build
 #=============================================================================
 # Targets provided globally by CMake.
 
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
+
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
@@ -67,17 +78,6 @@ install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
 	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
 
 # Special rule for the target install
 install: preinstall
@@ -166,6 +166,156 @@ preinstall/fast:
 depend:
 	cd /home/nie/----/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/rule
+
+# Convenience name for target.
+trajectory_polynomial_udp_node: ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/rule
+
+.PHONY : trajectory_polynomial_udp_node
+
+# fast build rule for target.
+trajectory_polynomial_udp_node/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/build.make ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/build
+.PHONY : trajectory_polynomial_udp_node/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genpy.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genpy.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genpy.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_genpy: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genpy.dir/rule
+
+.PHONY : ego_trajectory_udp_genpy
+
+# fast build rule for target.
+ego_trajectory_udp_genpy/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genpy.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genpy.dir/build
+.PHONY : ego_trajectory_udp_genpy/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_py.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_py.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_py.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_generate_messages_py: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_py.dir/rule
+
+.PHONY : ego_trajectory_udp_generate_messages_py
+
+# fast build rule for target.
+ego_trajectory_udp_generate_messages_py/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_py.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_py.dir/build
+.PHONY : ego_trajectory_udp_generate_messages_py/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gennodejs.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gennodejs.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gennodejs.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_gennodejs: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gennodejs.dir/rule
+
+.PHONY : ego_trajectory_udp_gennodejs
+
+# fast build rule for target.
+ego_trajectory_udp_gennodejs/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gennodejs.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gennodejs.dir/build
+.PHONY : ego_trajectory_udp_gennodejs/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_nodejs.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_nodejs.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_generate_messages_nodejs: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_nodejs.dir/rule
+
+.PHONY : ego_trajectory_udp_generate_messages_nodejs
+
+# fast build rule for target.
+ego_trajectory_udp_generate_messages_nodejs/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_nodejs.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_nodejs.dir/build
+.PHONY : ego_trajectory_udp_generate_messages_nodejs/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_lisp.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_lisp.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_generate_messages_lisp: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_lisp.dir/rule
+
+.PHONY : ego_trajectory_udp_generate_messages_lisp
+
+# fast build rule for target.
+ego_trajectory_udp_generate_messages_lisp/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_lisp.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_lisp.dir/build
+.PHONY : ego_trajectory_udp_generate_messages_lisp/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_eus.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_eus.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_generate_messages_eus: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_eus.dir/rule
+
+.PHONY : ego_trajectory_udp_generate_messages_eus
+
+# fast build rule for target.
+ego_trajectory_udp_generate_messages_eus/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_eus.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_eus.dir/build
+.PHONY : ego_trajectory_udp_generate_messages_eus/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gencpp.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gencpp.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gencpp.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_gencpp: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gencpp.dir/rule
+
+.PHONY : ego_trajectory_udp_gencpp
+
+# fast build rule for target.
+ego_trajectory_udp_gencpp/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gencpp.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_gencpp.dir/build
+.PHONY : ego_trajectory_udp_gencpp/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState.dir/rule
+
+# Convenience name for target.
+_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState: ego_trajectory_udp/CMakeFiles/_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState.dir/rule
+
+.PHONY : _ego_trajectory_udp_generate_messages_check_deps_AdsUdpState
+
+# fast build rule for target.
+_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState.dir/build.make ego_trajectory_udp/CMakeFiles/_ego_trajectory_udp_generate_messages_check_deps_AdsUdpState.dir/build
+.PHONY : _ego_trajectory_udp_generate_messages_check_deps_AdsUdpState/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_generate_messages: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages.dir/rule
+
+.PHONY : ego_trajectory_udp_generate_messages
+
+# fast build rule for target.
+ego_trajectory_udp_generate_messages/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages.dir/build
+.PHONY : ego_trajectory_udp_generate_messages/fast
 
 # Convenience name for target.
 ego_trajectory_udp/CMakeFiles/visualization_msgs_generate_messages_py.dir/rule:
@@ -378,6 +528,21 @@ std_msgs_generate_messages_eus/fast:
 .PHONY : std_msgs_generate_messages_eus/fast
 
 # Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_cpp.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_cpp.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_generate_messages_cpp: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_cpp.dir/rule
+
+.PHONY : ego_trajectory_udp_generate_messages_cpp
+
+# fast build rule for target.
+ego_trajectory_udp_generate_messages_cpp/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_cpp.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_generate_messages_cpp.dir/build
+.PHONY : ego_trajectory_udp_generate_messages_cpp/fast
+
+# Convenience name for target.
 ego_trajectory_udp/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule:
 	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
 .PHONY : ego_trajectory_udp/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
@@ -391,6 +556,21 @@ geometry_msgs_generate_messages_lisp: ego_trajectory_udp/CMakeFiles/geometry_msg
 geometry_msgs_generate_messages_lisp/fast:
 	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build.make ego_trajectory_udp/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build
 .PHONY : geometry_msgs_generate_messages_lisp/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genlisp.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genlisp.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genlisp.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_genlisp: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genlisp.dir/rule
+
+.PHONY : ego_trajectory_udp_genlisp
+
+# fast build rule for target.
+ego_trajectory_udp_genlisp/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genlisp.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_genlisp.dir/build
+.PHONY : ego_trajectory_udp_genlisp/fast
 
 # Convenience name for target.
 ego_trajectory_udp/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule:
@@ -421,6 +601,21 @@ rosgraph_msgs_generate_messages_cpp: ego_trajectory_udp/CMakeFiles/rosgraph_msgs
 rosgraph_msgs_generate_messages_cpp/fast:
 	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make ego_trajectory_udp/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build
 .PHONY : rosgraph_msgs_generate_messages_cpp/fast
+
+# Convenience name for target.
+ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_geneus.dir/rule:
+	cd /home/nie/----/build && $(MAKE) -f CMakeFiles/Makefile2 ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_geneus.dir/rule
+.PHONY : ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_geneus.dir/rule
+
+# Convenience name for target.
+ego_trajectory_udp_geneus: ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_geneus.dir/rule
+
+.PHONY : ego_trajectory_udp_geneus
+
+# fast build rule for target.
+ego_trajectory_udp_geneus/fast:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_geneus.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_udp_geneus.dir/build
+.PHONY : ego_trajectory_udp_geneus/fast
 
 # Convenience name for target.
 ego_trajectory_udp/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule:
@@ -860,14 +1055,51 @@ src/ego_trajectory_visualizer_node.cpp.s:
 	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/ego_trajectory_visualizer_node.dir/build.make ego_trajectory_udp/CMakeFiles/ego_trajectory_visualizer_node.dir/src/ego_trajectory_visualizer_node.cpp.s
 .PHONY : src/ego_trajectory_visualizer_node.cpp.s
 
+src/trajectory_polynomial_udp_node.o: src/trajectory_polynomial_udp_node.cpp.o
+
+.PHONY : src/trajectory_polynomial_udp_node.o
+
+# target to build an object file
+src/trajectory_polynomial_udp_node.cpp.o:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/build.make ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/src/trajectory_polynomial_udp_node.cpp.o
+.PHONY : src/trajectory_polynomial_udp_node.cpp.o
+
+src/trajectory_polynomial_udp_node.i: src/trajectory_polynomial_udp_node.cpp.i
+
+.PHONY : src/trajectory_polynomial_udp_node.i
+
+# target to preprocess a source file
+src/trajectory_polynomial_udp_node.cpp.i:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/build.make ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/src/trajectory_polynomial_udp_node.cpp.i
+.PHONY : src/trajectory_polynomial_udp_node.cpp.i
+
+src/trajectory_polynomial_udp_node.s: src/trajectory_polynomial_udp_node.cpp.s
+
+.PHONY : src/trajectory_polynomial_udp_node.s
+
+# target to generate assembly for a file
+src/trajectory_polynomial_udp_node.cpp.s:
+	cd /home/nie/----/build && $(MAKE) -f ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/build.make ego_trajectory_udp/CMakeFiles/trajectory_polynomial_udp_node.dir/src/trajectory_polynomial_udp_node.cpp.s
+.PHONY : src/trajectory_polynomial_udp_node.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... install/strip"
 	@echo "... edit_cache"
+	@echo "... trajectory_polynomial_udp_node"
+	@echo "... ego_trajectory_udp_genpy"
+	@echo "... ego_trajectory_udp_generate_messages_py"
+	@echo "... ego_trajectory_udp_gennodejs"
+	@echo "... install/strip"
+	@echo "... ego_trajectory_udp_generate_messages_nodejs"
+	@echo "... ego_trajectory_udp_generate_messages_lisp"
+	@echo "... ego_trajectory_udp_generate_messages_eus"
+	@echo "... ego_trajectory_udp_gencpp"
+	@echo "... _ego_trajectory_udp_generate_messages_check_deps_AdsUdpState"
+	@echo "... ego_trajectory_udp_generate_messages"
 	@echo "... install"
 	@echo "... visualization_msgs_generate_messages_py"
 	@echo "... list_install_components"
@@ -884,10 +1116,13 @@ help:
 	@echo "... visualization_msgs_generate_messages_cpp"
 	@echo "... actionlib_msgs_generate_messages_cpp"
 	@echo "... std_msgs_generate_messages_eus"
+	@echo "... ego_trajectory_udp_generate_messages_cpp"
 	@echo "... geometry_msgs_generate_messages_lisp"
+	@echo "... ego_trajectory_udp_genlisp"
 	@echo "... roscpp_generate_messages_nodejs"
 	@echo "... test"
 	@echo "... rosgraph_msgs_generate_messages_cpp"
+	@echo "... ego_trajectory_udp_geneus"
 	@echo "... std_msgs_generate_messages_cpp"
 	@echo "... visualization_msgs_generate_messages_lisp"
 	@echo "... geometry_msgs_generate_messages_nodejs"
@@ -924,6 +1159,9 @@ help:
 	@echo "... src/ego_trajectory_visualizer_node.o"
 	@echo "... src/ego_trajectory_visualizer_node.i"
 	@echo "... src/ego_trajectory_visualizer_node.s"
+	@echo "... src/trajectory_polynomial_udp_node.o"
+	@echo "... src/trajectory_polynomial_udp_node.i"
+	@echo "... src/trajectory_polynomial_udp_node.s"
 .PHONY : help
 
 

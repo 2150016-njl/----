@@ -1,5 +1,5 @@
 <launch>
-  <arg name="trajectory" default="straight"/>
+  <arg name="trajectory" default="left_lane_change"/>
   <arg name="frame_id" default="map"/>
 
   <arg name="ads_bind_ip" default="192.168.88.3"/>
@@ -16,8 +16,8 @@
   <arg name="rate_hz" default="10.0"/>
   <arg name="dt" default="0.1"/>
   <arg name="point_num" default="50"/>
-  <arg name="trajectory_length" default="100.0"/>
-  <arg name="speed" default="3.0"/>
+  <arg name="trajectory_length" default="20.0"/>
+  <arg name="speed" default="1.5"/>
   <arg name="accel_time" default="2.0"/>
   <arg name="lane_width" default="3.5"/>
   <arg name="turn_radius" default="12.0"/>

@@ -179,7 +179,7 @@ foreach(library ${libraries})
   endif()
 endforeach()
 
-set(ego_trajectory_udp_EXPORTED_TARGETS "")
+set(ego_trajectory_udp_EXPORTED_TARGETS "ego_trajectory_udp_generate_messages_cpp;ego_trajectory_udp_generate_messages_eus;ego_trajectory_udp_generate_messages_lisp;ego_trajectory_udp_generate_messages_nodejs;ego_trajectory_udp_generate_messages_py")
 # create dummy targets for exported code generation targets to make life of users easier
 foreach(t ${ego_trajectory_udp_EXPORTED_TARGETS})
   if(NOT TARGET ${t})
@@ -187,7 +187,7 @@ foreach(t ${ego_trajectory_udp_EXPORTED_TARGETS})
   endif()
 endforeach()
 
-set(depends "geometry_msgs;nav_msgs;roscpp;std_msgs;visualization_msgs")
+set(depends "geometry_msgs;message_runtime;nav_msgs;roscpp;std_msgs;visualization_msgs")
 foreach(depend ${depends})
   string(REPLACE " " ";" depend_list ${depend})
   # the package name of the dependency must be kept in a unique variable so that it is not overwritten in recursive calls
@@ -216,7 +216,7 @@ foreach(depend ${depends})
   _list_append_deduplicate(ego_trajectory_udp_EXPORTED_TARGETS ${${ego_trajectory_udp_dep}_EXPORTED_TARGETS})
 endforeach()
 
-set(pkg_cfg_extras "")
+set(pkg_cfg_extras "ego_trajectory_udp-msg-extras.cmake")
 foreach(extra ${pkg_cfg_extras})
   if(NOT IS_ABSOLUTE ${extra})
     set(extra ${ego_trajectory_udp_DIR}/${extra})
